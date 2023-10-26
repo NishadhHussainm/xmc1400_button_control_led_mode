@@ -1,0 +1,3829 @@
+
+button_control_led.elf:     file format elf32-littlearm
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         000011e0  10001000  10001000  00001000  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .VENEER_Code  00000144  2000000c  100021e0  0000800c  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 Stack         00000400  20000150  00000000  00000150  2**0
+                  ALLOC
+  3 .data         00000040  20000550  10002324  00008550  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+  4 .bss          00000010  20000590  00000440  00008590  2**2
+                  ALLOC
+  5 .no_init      00000004  20003ffc  00003eac  00000150  2**2
+                  ALLOC
+  6 .debug_aranges 00000720  00000000  00000000  00008590  2**3
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_info   0000a5b5  00000000  00000000  00008cb0  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_abbrev 00001d2f  00000000  00000000  00013265  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_line   0000473c  00000000  00000000  00014f94  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_frame  000015d0  00000000  00000000  000196d0  2**2
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_str    0000585e  00000000  00000000  0001aca0  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 12 .debug_loc    000022cc  00000000  00000000  000204fe  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 13 .debug_ranges 000005b8  00000000  00000000  000227d0  2**3
+                  CONTENTS, READONLY, DEBUGGING
+ 14 .build_attributes 00000421  00000000  00000000  00022d88  2**0
+                  CONTENTS, READONLY
+
+Disassembly of section .text:
+
+10001000 <__Vectors>:
+10001000:	50 05 00 20 1d 10 00 10 00 00 00 00 9d 10 00 10     P.. ............
+10001010:	00 18 04 00 00 01 00 00 00 00 00 80                 ............
+
+1000101c <Reset_Handler>:
+    .thumb_func 
+    .globl  Reset_Handler
+    .type   Reset_Handler, %function
+Reset_Handler: 
+/* Initialize interrupt veneer */
+	ldr	r1, =eROData
+1000101c:	4911      	ldr	r1, [pc, #68]	; (10001064 <__copy_data+0xe>)
+	ldr	r2, =VeneerStart
+1000101e:	4a12      	ldr	r2, [pc, #72]	; (10001068 <__copy_data+0x12>)
+	ldr	r3, =VeneerEnd
+10001020:	4b12      	ldr	r3, [pc, #72]	; (1000106c <__copy_data+0x16>)
+	bl  __copy_data
+10001022:	f000 f818 	bl	10001056 <__copy_data>
+
+    ldr  r0, =SystemInit
+10001026:	4812      	ldr	r0, [pc, #72]	; (10001070 <__copy_data+0x1a>)
+    blx  r0
+10001028:	4780      	blx	r0
+	
+/* Initialize data */
+	ldr	r1, =DataLoadAddr
+1000102a:	4912      	ldr	r1, [pc, #72]	; (10001074 <__copy_data+0x1e>)
+	ldr	r2, =__data_start
+1000102c:	4a12      	ldr	r2, [pc, #72]	; (10001078 <__copy_data+0x22>)
+	ldr	r3, =__data_end
+1000102e:	4b13      	ldr	r3, [pc, #76]	; (1000107c <__copy_data+0x26>)
+	bl  __copy_data
+10001030:	f000 f811 	bl	10001056 <__copy_data>
+
+/* RAM code */
+	ldr	r1, =__ram_code_load
+10001034:	4912      	ldr	r1, [pc, #72]	; (10001080 <__copy_data+0x2a>)
+	ldr	r2, =__ram_code_start
+10001036:	4a13      	ldr	r2, [pc, #76]	; (10001084 <__copy_data+0x2e>)
+	ldr	r3, =__ram_code_end
+10001038:	4b13      	ldr	r3, [pc, #76]	; (10001088 <__copy_data+0x32>)
+	bl  __copy_data
+1000103a:	f000 f80c 	bl	10001056 <__copy_data>
+ *    __bss_end__: end of the BSS section.
+ *
+ *  Both addresses must be aligned to 4 bytes boundary.
+ */
+#ifndef __SKIP_BSS_CLEAR
+	ldr	r1, =__bss_start
+1000103e:	4913      	ldr	r1, [pc, #76]	; (1000108c <__copy_data+0x36>)
+	ldr	r2, =__bss_end
+10001040:	4a13      	ldr	r2, [pc, #76]	; (10001090 <__copy_data+0x3a>)
+
+	movs	r0, 0
+10001042:	2000      	movs	r0, #0
+
+	subs	r2, r1
+10001044:	1a52      	subs	r2, r2, r1
+	ble	.L_loop3_done
+10001046:	dd02      	ble.n	1000104e <Reset_Handler+0x32>
+
+.L_loop3:
+	subs	r2, #4
+10001048:	3a04      	subs	r2, #4
+	str	r0, [r1, r2]
+1000104a:	5088      	str	r0, [r1, r2]
+	bgt	.L_loop3
+1000104c:	dcfc      	bgt.n	10001048 <Reset_Handler+0x2c>
+.L_loop3_done:
+#endif /* __SKIP_BSS_CLEAR */
+
+#ifndef __SKIP_LIBC_INIT_ARRAY
+    ldr  r0, =__libc_init_array
+1000104e:	4811      	ldr	r0, [pc, #68]	; (10001094 <__copy_data+0x3e>)
+    blx  r0
+10001050:	4780      	blx	r0
+#endif
+
+    ldr  r0, =main
+10001052:	4811      	ldr	r0, [pc, #68]	; (10001098 <__copy_data+0x42>)
+    blx  r0
+10001054:	4780      	blx	r0
+
+10001056 <__copy_data>:
+ *    r3: end of the section to copy to
+ *
+ *  All addresses must be aligned to 4 bytes boundary.
+ *  Uses r0
+ */
+	subs	r3, r2
+10001056:	1a9b      	subs	r3, r3, r2
+	ble	.L_loop_done
+10001058:	dd03      	ble.n	10001062 <__copy_data+0xc>
+
+.L_loop:
+	subs	r3, #4
+1000105a:	3b04      	subs	r3, #4
+	ldr	r0, [r1,r3]
+1000105c:	58c8      	ldr	r0, [r1, r3]
+	str	r0, [r2,r3]
+1000105e:	50d0      	str	r0, [r2, r3]
+	bgt	.L_loop
+10001060:	dcfb      	bgt.n	1000105a <__copy_data+0x4>
+
+.L_loop_done:
+	bx  lr
+10001062:	4770      	bx	lr
+    .thumb_func 
+    .globl  Reset_Handler
+    .type   Reset_Handler, %function
+Reset_Handler: 
+/* Initialize interrupt veneer */
+	ldr	r1, =eROData
+10001064:	100021e0 	.word	0x100021e0
+	ldr	r2, =VeneerStart
+10001068:	2000000c 	.word	0x2000000c
+	ldr	r3, =VeneerEnd
+1000106c:	20000150 	.word	0x20000150
+	bl  __copy_data
+
+    ldr  r0, =SystemInit
+10001070:	100010a1 	.word	0x100010a1
+    blx  r0
+	
+/* Initialize data */
+	ldr	r1, =DataLoadAddr
+10001074:	10002324 	.word	0x10002324
+	ldr	r2, =__data_start
+10001078:	20000550 	.word	0x20000550
+	ldr	r3, =__data_end
+1000107c:	20000590 	.word	0x20000590
+	bl  __copy_data
+
+/* RAM code */
+	ldr	r1, =__ram_code_load
+10001080:	10002364 	.word	0x10002364
+	ldr	r2, =__ram_code_start
+10001084:	20000590 	.word	0x20000590
+	ldr	r3, =__ram_code_end
+10001088:	20000590 	.word	0x20000590
+ *    __bss_end__: end of the BSS section.
+ *
+ *  Both addresses must be aligned to 4 bytes boundary.
+ */
+#ifndef __SKIP_BSS_CLEAR
+	ldr	r1, =__bss_start
+1000108c:	20000590 	.word	0x20000590
+	ldr	r2, =__bss_end
+10001090:	200005a0 	.word	0x200005a0
+	bgt	.L_loop3
+.L_loop3_done:
+#endif /* __SKIP_BSS_CLEAR */
+
+#ifndef __SKIP_LIBC_INIT_ARRAY
+    ldr  r0, =__libc_init_array
+10001094:	100020cd 	.word	0x100020cd
+    blx  r0
+#endif
+
+    ldr  r0, =main
+10001098:	1000208d 	.word	0x1000208d
+
+1000109c <HardFault_Handler>:
+    
+    .thumb_func
+    .weak Default_handler
+    .type Default_handler, %function
+Default_Handler:
+    b  .
+1000109c:	e7fe      	b.n	1000109c <HardFault_Handler>
+	...
+
+100010a0 <SystemInit>:
+/*******************************************************************************
+ * API IMPLEMENTATION
+ *******************************************************************************/
+
+__WEAK void SystemInit(void)
+{
+100010a0:	b580      	push	{r7, lr}
+100010a2:	af00      	add	r7, sp, #0
+  SystemCoreSetup();
+100010a4:	f000 fe44 	bl	10001d30 <SystemCoreSetup>
+  SystemCoreClockSetup();
+100010a8:	f000 fe90 	bl	10001dcc <SystemCoreClockSetup>
+}
+100010ac:	46bd      	mov	sp, r7
+100010ae:	bd80      	pop	{r7, pc}
+
+100010b0 <SystemCoreClockUpdate>:
+
+  SystemCoreClockUpdate();
+}
+
+__WEAK void SystemCoreClockUpdate(void)
+{
+100010b0:	b580      	push	{r7, lr}
+100010b2:	af00      	add	r7, sp, #0
+  static uint32_t IDIV, FDIV;
+
+  IDIV = ((SCU_CLK->CLKCR) & SCU_CLK_CLKCR_IDIV_Msk) >> SCU_CLK_CLKCR_IDIV_Pos;
+100010b4:	4b2a      	ldr	r3, [pc, #168]	; (10001160 <SystemCoreClockUpdate+0xb0>)
+100010b6:	681a      	ldr	r2, [r3, #0]
+100010b8:	23ff      	movs	r3, #255	; 0xff
+100010ba:	021b      	lsls	r3, r3, #8
+100010bc:	4013      	ands	r3, r2
+100010be:	0a1a      	lsrs	r2, r3, #8
+100010c0:	4b28      	ldr	r3, [pc, #160]	; (10001164 <SystemCoreClockUpdate+0xb4>)
+100010c2:	601a      	str	r2, [r3, #0]
+
+  if (IDIV != 0)
+100010c4:	4b27      	ldr	r3, [pc, #156]	; (10001164 <SystemCoreClockUpdate+0xb4>)
+100010c6:	681b      	ldr	r3, [r3, #0]
+100010c8:	2b00      	cmp	r3, #0
+100010ca:	d037      	beq.n	1000113c <SystemCoreClockUpdate+0x8c>
+  {
+    FDIV = ((SCU_CLK->CLKCR) & SCU_CLK_CLKCR_FDIV_Msk) >> SCU_CLK_CLKCR_FDIV_Pos;
+100010cc:	4b24      	ldr	r3, [pc, #144]	; (10001160 <SystemCoreClockUpdate+0xb0>)
+100010ce:	681b      	ldr	r3, [r3, #0]
+100010d0:	22ff      	movs	r2, #255	; 0xff
+100010d2:	401a      	ands	r2, r3
+100010d4:	4b24      	ldr	r3, [pc, #144]	; (10001168 <SystemCoreClockUpdate+0xb8>)
+100010d6:	601a      	str	r2, [r3, #0]
+    FDIV |= ((SCU_CLK->CLKCR1) & SCU_CLK_CLKCR1_FDIV_Msk) << 8;
+100010d8:	4b21      	ldr	r3, [pc, #132]	; (10001160 <SystemCoreClockUpdate+0xb0>)
+100010da:	69db      	ldr	r3, [r3, #28]
+100010dc:	2203      	movs	r2, #3
+100010de:	4013      	ands	r3, r2
+100010e0:	021a      	lsls	r2, r3, #8
+100010e2:	4b21      	ldr	r3, [pc, #132]	; (10001168 <SystemCoreClockUpdate+0xb8>)
+100010e4:	681b      	ldr	r3, [r3, #0]
+100010e6:	431a      	orrs	r2, r3
+100010e8:	4b1f      	ldr	r3, [pc, #124]	; (10001168 <SystemCoreClockUpdate+0xb8>)
+100010ea:	601a      	str	r2, [r3, #0]
+    
+    /* Fractional divider is enabled and used */
+    if (((SCU_CLK->CLKCR1) & SCU_CLK_CLKCR1_DCLKSEL_Msk) == 0U)
+100010ec:	4b1c      	ldr	r3, [pc, #112]	; (10001160 <SystemCoreClockUpdate+0xb0>)
+100010ee:	69da      	ldr	r2, [r3, #28]
+100010f0:	2380      	movs	r3, #128	; 0x80
+100010f2:	009b      	lsls	r3, r3, #2
+100010f4:	4013      	ands	r3, r2
+100010f6:	d10e      	bne.n	10001116 <SystemCoreClockUpdate+0x66>
+    {
+       SystemCoreClock = ((uint32_t)((DCO1_FREQUENCY << 6U) / ((IDIV << 10) + FDIV))) << 4U;
+100010f8:	4b1a      	ldr	r3, [pc, #104]	; (10001164 <SystemCoreClockUpdate+0xb4>)
+100010fa:	681b      	ldr	r3, [r3, #0]
+100010fc:	029a      	lsls	r2, r3, #10
+100010fe:	4b1a      	ldr	r3, [pc, #104]	; (10001168 <SystemCoreClockUpdate+0xb8>)
+10001100:	681b      	ldr	r3, [r3, #0]
+10001102:	18d3      	adds	r3, r2, r3
+10001104:	4819      	ldr	r0, [pc, #100]	; (1000116c <SystemCoreClockUpdate+0xbc>)
+10001106:	1c19      	adds	r1, r3, #0
+10001108:	f000 fbe6 	bl	100018d8 <__aeabi_uidiv>
+1000110c:	1c03      	adds	r3, r0, #0
+1000110e:	011a      	lsls	r2, r3, #4
+10001110:	4b17      	ldr	r3, [pc, #92]	; (10001170 <SystemCoreClockUpdate+0xc0>)
+10001112:	601a      	str	r2, [r3, #0]
+10001114:	e021      	b.n	1000115a <SystemCoreClockUpdate+0xaa>
+    }
+    else
+    {
+       SystemCoreClock = ((uint32_t)((OSCHP_GetFrequency() << 6U) / ((IDIV << 10) + FDIV))) << 4U;
+10001116:	f000 f82f 	bl	10001178 <OSCHP_GetFrequency>
+1000111a:	1c03      	adds	r3, r0, #0
+1000111c:	0199      	lsls	r1, r3, #6
+1000111e:	4b11      	ldr	r3, [pc, #68]	; (10001164 <SystemCoreClockUpdate+0xb4>)
+10001120:	681b      	ldr	r3, [r3, #0]
+10001122:	029a      	lsls	r2, r3, #10
+10001124:	4b10      	ldr	r3, [pc, #64]	; (10001168 <SystemCoreClockUpdate+0xb8>)
+10001126:	681b      	ldr	r3, [r3, #0]
+10001128:	18d3      	adds	r3, r2, r3
+1000112a:	1c08      	adds	r0, r1, #0
+1000112c:	1c19      	adds	r1, r3, #0
+1000112e:	f000 fbd3 	bl	100018d8 <__aeabi_uidiv>
+10001132:	1c03      	adds	r3, r0, #0
+10001134:	011a      	lsls	r2, r3, #4
+10001136:	4b0e      	ldr	r3, [pc, #56]	; (10001170 <SystemCoreClockUpdate+0xc0>)
+10001138:	601a      	str	r2, [r3, #0]
+1000113a:	e00e      	b.n	1000115a <SystemCoreClockUpdate+0xaa>
+    }
+  }
+  else
+  {
+    /* Fractional divider bypassed. */
+    if (((SCU_CLK->CLKCR1) & SCU_CLK_CLKCR1_DCLKSEL_Msk) == 0U)
+1000113c:	4b08      	ldr	r3, [pc, #32]	; (10001160 <SystemCoreClockUpdate+0xb0>)
+1000113e:	69da      	ldr	r2, [r3, #28]
+10001140:	2380      	movs	r3, #128	; 0x80
+10001142:	009b      	lsls	r3, r3, #2
+10001144:	4013      	ands	r3, r2
+10001146:	d103      	bne.n	10001150 <SystemCoreClockUpdate+0xa0>
+    {
+        SystemCoreClock = DCO1_FREQUENCY;
+10001148:	4b09      	ldr	r3, [pc, #36]	; (10001170 <SystemCoreClockUpdate+0xc0>)
+1000114a:	4a0a      	ldr	r2, [pc, #40]	; (10001174 <SystemCoreClockUpdate+0xc4>)
+1000114c:	601a      	str	r2, [r3, #0]
+1000114e:	e004      	b.n	1000115a <SystemCoreClockUpdate+0xaa>
+    }
+    else
+    {
+        SystemCoreClock = OSCHP_GetFrequency();
+10001150:	f000 f812 	bl	10001178 <OSCHP_GetFrequency>
+10001154:	1c02      	adds	r2, r0, #0
+10001156:	4b06      	ldr	r3, [pc, #24]	; (10001170 <SystemCoreClockUpdate+0xc0>)
+10001158:	601a      	str	r2, [r3, #0]
+    }
+  }
+}
+1000115a:	46bd      	mov	sp, r7
+1000115c:	bd80      	pop	{r7, pc}
+1000115e:	46c0      	nop			; (mov r8, r8)
+10001160:	40010300 	.word	0x40010300
+10001164:	20000590 	.word	0x20000590
+10001168:	20000594 	.word	0x20000594
+1000116c:	b71b0000 	.word	0xb71b0000
+10001170:	20003ffc 	.word	0x20003ffc
+10001174:	02dc6c00 	.word	0x02dc6c00
+
+10001178 <OSCHP_GetFrequency>:
+
+__WEAK uint32_t OSCHP_GetFrequency(void)
+{
+10001178:	b580      	push	{r7, lr}
+1000117a:	af00      	add	r7, sp, #0
+  return OSCHP_FREQUENCY;
+1000117c:	4b01      	ldr	r3, [pc, #4]	; (10001184 <OSCHP_GetFrequency+0xc>)
+}
+1000117e:	1c18      	adds	r0, r3, #0
+10001180:	46bd      	mov	sp, r7
+10001182:	bd80      	pop	{r7, pc}
+10001184:	01312d00 	.word	0x01312d00
+
+10001188 <XMC_GPIO_Init>:
+/*******************************************************************************
+ * API IMPLEMENTATION
+ *******************************************************************************/
+
+void XMC_GPIO_Init(XMC_GPIO_PORT_t *const port, const uint8_t pin, const XMC_GPIO_CONFIG_t *const config)
+{
+10001188:	b590      	push	{r4, r7, lr}
+1000118a:	b085      	sub	sp, #20
+1000118c:	af00      	add	r7, sp, #0
+1000118e:	60f8      	str	r0, [r7, #12]
+10001190:	607a      	str	r2, [r7, #4]
+10001192:	230b      	movs	r3, #11
+10001194:	18fb      	adds	r3, r7, r3
+10001196:	1c0a      	adds	r2, r1, #0
+10001198:	701a      	strb	r2, [r3, #0]
+  XMC_ASSERT("XMC_GPIO_Init: Invalid port", XMC_GPIO_CHECK_PORT(port));
+  XMC_ASSERT("XMC_GPIO_Init: Invalid mode", XMC_GPIO_IsModeValid(config->mode));
+  XMC_ASSERT("XMC_GPIO_Init: Invalid input hysteresis", XMC_GPIO_CHECK_INPUT_HYSTERESIS(config->input_hysteresis));
+
+  /* Switch to input */
+  port->IOCR[pin >> 2U] &= ~(uint32_t)((uint32_t)PORT_IOCR_PC_Msk << (PORT_IOCR_PC_Size * (pin & 0x3U)));
+1000119a:	230b      	movs	r3, #11
+1000119c:	18fb      	adds	r3, r7, r3
+1000119e:	781b      	ldrb	r3, [r3, #0]
+100011a0:	089b      	lsrs	r3, r3, #2
+100011a2:	b2db      	uxtb	r3, r3
+100011a4:	1c18      	adds	r0, r3, #0
+100011a6:	230b      	movs	r3, #11
+100011a8:	18fb      	adds	r3, r7, r3
+100011aa:	781b      	ldrb	r3, [r3, #0]
+100011ac:	089b      	lsrs	r3, r3, #2
+100011ae:	b2db      	uxtb	r3, r3
+100011b0:	1c1a      	adds	r2, r3, #0
+100011b2:	68fb      	ldr	r3, [r7, #12]
+100011b4:	3204      	adds	r2, #4
+100011b6:	0092      	lsls	r2, r2, #2
+100011b8:	58d3      	ldr	r3, [r2, r3]
+100011ba:	220b      	movs	r2, #11
+100011bc:	18ba      	adds	r2, r7, r2
+100011be:	7812      	ldrb	r2, [r2, #0]
+100011c0:	2103      	movs	r1, #3
+100011c2:	400a      	ands	r2, r1
+100011c4:	00d2      	lsls	r2, r2, #3
+100011c6:	1c11      	adds	r1, r2, #0
+100011c8:	22fc      	movs	r2, #252	; 0xfc
+100011ca:	408a      	lsls	r2, r1
+100011cc:	43d2      	mvns	r2, r2
+100011ce:	401a      	ands	r2, r3
+100011d0:	1c11      	adds	r1, r2, #0
+100011d2:	68fb      	ldr	r3, [r7, #12]
+100011d4:	1d02      	adds	r2, r0, #4
+100011d6:	0092      	lsls	r2, r2, #2
+100011d8:	50d1      	str	r1, [r2, r3]
+
+  /* HW port control is disabled */
+  port->HWSEL &= ~(uint32_t)((uint32_t)PORT_HWSEL_Msk << ((uint32_t)pin << 1U));
+100011da:	68fb      	ldr	r3, [r7, #12]
+100011dc:	6f5b      	ldr	r3, [r3, #116]	; 0x74
+100011de:	220b      	movs	r2, #11
+100011e0:	18ba      	adds	r2, r7, r2
+100011e2:	7812      	ldrb	r2, [r2, #0]
+100011e4:	0052      	lsls	r2, r2, #1
+100011e6:	1c11      	adds	r1, r2, #0
+100011e8:	2203      	movs	r2, #3
+100011ea:	408a      	lsls	r2, r1
+100011ec:	43d2      	mvns	r2, r2
+100011ee:	401a      	ands	r2, r3
+100011f0:	68fb      	ldr	r3, [r7, #12]
+100011f2:	675a      	str	r2, [r3, #116]	; 0x74
+
+  /* Set input hysteresis */
+  port->PHCR[(uint32_t)pin >> 3U] &= ~(uint32_t)((uint32_t)PORT_PHCR_Msk << ((uint32_t)PORT_PHCR_Size * ((uint32_t)pin & 0x7U)));
+100011f4:	230b      	movs	r3, #11
+100011f6:	18fb      	adds	r3, r7, r3
+100011f8:	781b      	ldrb	r3, [r3, #0]
+100011fa:	08db      	lsrs	r3, r3, #3
+100011fc:	b2db      	uxtb	r3, r3
+100011fe:	1c18      	adds	r0, r3, #0
+10001200:	230b      	movs	r3, #11
+10001202:	18fb      	adds	r3, r7, r3
+10001204:	781b      	ldrb	r3, [r3, #0]
+10001206:	08db      	lsrs	r3, r3, #3
+10001208:	b2db      	uxtb	r3, r3
+1000120a:	1c1a      	adds	r2, r3, #0
+1000120c:	68fb      	ldr	r3, [r7, #12]
+1000120e:	3210      	adds	r2, #16
+10001210:	0092      	lsls	r2, r2, #2
+10001212:	58d3      	ldr	r3, [r2, r3]
+10001214:	220b      	movs	r2, #11
+10001216:	18ba      	adds	r2, r7, r2
+10001218:	7812      	ldrb	r2, [r2, #0]
+1000121a:	2107      	movs	r1, #7
+1000121c:	400a      	ands	r2, r1
+1000121e:	0092      	lsls	r2, r2, #2
+10001220:	1c11      	adds	r1, r2, #0
+10001222:	2204      	movs	r2, #4
+10001224:	408a      	lsls	r2, r1
+10001226:	43d2      	mvns	r2, r2
+10001228:	401a      	ands	r2, r3
+1000122a:	1c11      	adds	r1, r2, #0
+1000122c:	68fb      	ldr	r3, [r7, #12]
+1000122e:	1c02      	adds	r2, r0, #0
+10001230:	3210      	adds	r2, #16
+10001232:	0092      	lsls	r2, r2, #2
+10001234:	50d1      	str	r1, [r2, r3]
+  port->PHCR[(uint32_t)pin >> 3U] |= (uint32_t)config->input_hysteresis << ((uint32_t)PORT_PHCR_Size * ((uint32_t)pin & 0x7U));
+10001236:	230b      	movs	r3, #11
+10001238:	18fb      	adds	r3, r7, r3
+1000123a:	781b      	ldrb	r3, [r3, #0]
+1000123c:	08db      	lsrs	r3, r3, #3
+1000123e:	b2db      	uxtb	r3, r3
+10001240:	1c18      	adds	r0, r3, #0
+10001242:	230b      	movs	r3, #11
+10001244:	18fb      	adds	r3, r7, r3
+10001246:	781b      	ldrb	r3, [r3, #0]
+10001248:	08db      	lsrs	r3, r3, #3
+1000124a:	b2db      	uxtb	r3, r3
+1000124c:	1c1a      	adds	r2, r3, #0
+1000124e:	68fb      	ldr	r3, [r7, #12]
+10001250:	3210      	adds	r2, #16
+10001252:	0092      	lsls	r2, r2, #2
+10001254:	58d2      	ldr	r2, [r2, r3]
+10001256:	687b      	ldr	r3, [r7, #4]
+10001258:	785b      	ldrb	r3, [r3, #1]
+1000125a:	1c1c      	adds	r4, r3, #0
+1000125c:	230b      	movs	r3, #11
+1000125e:	18fb      	adds	r3, r7, r3
+10001260:	781b      	ldrb	r3, [r3, #0]
+10001262:	2107      	movs	r1, #7
+10001264:	400b      	ands	r3, r1
+10001266:	009b      	lsls	r3, r3, #2
+10001268:	409c      	lsls	r4, r3
+1000126a:	1c23      	adds	r3, r4, #0
+1000126c:	431a      	orrs	r2, r3
+1000126e:	1c11      	adds	r1, r2, #0
+10001270:	68fb      	ldr	r3, [r7, #12]
+10001272:	1c02      	adds	r2, r0, #0
+10001274:	3210      	adds	r2, #16
+10001276:	0092      	lsls	r2, r2, #2
+10001278:	50d1      	str	r1, [r2, r3]
+
+  /* Enable digital input */
+  if (XMC_GPIO_CHECK_ANALOG_PORT(port))
+1000127a:	68fb      	ldr	r3, [r7, #12]
+1000127c:	4a20      	ldr	r2, [pc, #128]	; (10001300 <XMC_GPIO_Init+0x178>)
+1000127e:	4293      	cmp	r3, r2
+10001280:	d10b      	bne.n	1000129a <XMC_GPIO_Init+0x112>
+  {
+    port->PDISC &= ~(uint32_t)((uint32_t)0x1U << pin);
+10001282:	68fb      	ldr	r3, [r7, #12]
+10001284:	6e1b      	ldr	r3, [r3, #96]	; 0x60
+10001286:	220b      	movs	r2, #11
+10001288:	18ba      	adds	r2, r7, r2
+1000128a:	7812      	ldrb	r2, [r2, #0]
+1000128c:	2101      	movs	r1, #1
+1000128e:	4091      	lsls	r1, r2
+10001290:	1c0a      	adds	r2, r1, #0
+10001292:	43d2      	mvns	r2, r2
+10001294:	401a      	ands	r2, r3
+10001296:	68fb      	ldr	r3, [r7, #12]
+10001298:	661a      	str	r2, [r3, #96]	; 0x60
+  }
+
+  if ((config->mode & XMC_GPIO_MODE_OE) != 0)
+1000129a:	687b      	ldr	r3, [r7, #4]
+1000129c:	781b      	ldrb	r3, [r3, #0]
+1000129e:	b2db      	uxtb	r3, r3
+100012a0:	b25b      	sxtb	r3, r3
+100012a2:	2b00      	cmp	r3, #0
+100012a4:	da07      	bge.n	100012b6 <XMC_GPIO_Init+0x12e>
+  {
+    /* If output is enabled */
+
+    /* Set output level */
+    port->OMR = (uint32_t)config->output_level << pin;
+100012a6:	687b      	ldr	r3, [r7, #4]
+100012a8:	685a      	ldr	r2, [r3, #4]
+100012aa:	230b      	movs	r3, #11
+100012ac:	18fb      	adds	r3, r7, r3
+100012ae:	781b      	ldrb	r3, [r3, #0]
+100012b0:	409a      	lsls	r2, r3
+100012b2:	68fb      	ldr	r3, [r7, #12]
+100012b4:	605a      	str	r2, [r3, #4]
+  }
+
+  /* Set mode */
+  port->IOCR[pin >> 2U] |= (uint32_t)config->mode << (PORT_IOCR_PC_Size * (pin & 0x3U));
+100012b6:	230b      	movs	r3, #11
+100012b8:	18fb      	adds	r3, r7, r3
+100012ba:	781b      	ldrb	r3, [r3, #0]
+100012bc:	089b      	lsrs	r3, r3, #2
+100012be:	b2db      	uxtb	r3, r3
+100012c0:	1c18      	adds	r0, r3, #0
+100012c2:	230b      	movs	r3, #11
+100012c4:	18fb      	adds	r3, r7, r3
+100012c6:	781b      	ldrb	r3, [r3, #0]
+100012c8:	089b      	lsrs	r3, r3, #2
+100012ca:	b2db      	uxtb	r3, r3
+100012cc:	1c1a      	adds	r2, r3, #0
+100012ce:	68fb      	ldr	r3, [r7, #12]
+100012d0:	3204      	adds	r2, #4
+100012d2:	0092      	lsls	r2, r2, #2
+100012d4:	58d2      	ldr	r2, [r2, r3]
+100012d6:	687b      	ldr	r3, [r7, #4]
+100012d8:	781b      	ldrb	r3, [r3, #0]
+100012da:	1c1c      	adds	r4, r3, #0
+100012dc:	230b      	movs	r3, #11
+100012de:	18fb      	adds	r3, r7, r3
+100012e0:	781b      	ldrb	r3, [r3, #0]
+100012e2:	2103      	movs	r1, #3
+100012e4:	400b      	ands	r3, r1
+100012e6:	00db      	lsls	r3, r3, #3
+100012e8:	409c      	lsls	r4, r3
+100012ea:	1c23      	adds	r3, r4, #0
+100012ec:	431a      	orrs	r2, r3
+100012ee:	1c11      	adds	r1, r2, #0
+100012f0:	68fb      	ldr	r3, [r7, #12]
+100012f2:	1d02      	adds	r2, r0, #4
+100012f4:	0092      	lsls	r2, r2, #2
+100012f6:	50d1      	str	r1, [r2, r3]
+}
+100012f8:	46bd      	mov	sp, r7
+100012fa:	b005      	add	sp, #20
+100012fc:	bd90      	pop	{r4, r7, pc}
+100012fe:	46c0      	nop			; (mov r8, r8)
+10001300:	40040200 	.word	0x40040200
+
+10001304 <XMC_SCU_LockProtectedBits>:
+#endif
+}
+
+/* API to lock protected bitfields from being modified */
+void XMC_SCU_LockProtectedBits(void)
+{
+10001304:	b580      	push	{r7, lr}
+10001306:	af00      	add	r7, sp, #0
+  SCU_GENERAL->PASSWD = SCU_GCU_PASSWD_PROT_ENABLE;
+10001308:	4b02      	ldr	r3, [pc, #8]	; (10001314 <XMC_SCU_LockProtectedBits+0x10>)
+1000130a:	22c3      	movs	r2, #195	; 0xc3
+1000130c:	625a      	str	r2, [r3, #36]	; 0x24
+}
+1000130e:	46bd      	mov	sp, r7
+10001310:	bd80      	pop	{r7, pc}
+10001312:	46c0      	nop			; (mov r8, r8)
+10001314:	40010000 	.word	0x40010000
+
+10001318 <XMC_SCU_UnlockProtectedBits>:
+
+/* API to make protected bitfields available for modification */
+void XMC_SCU_UnlockProtectedBits(void)
+{
+10001318:	b580      	push	{r7, lr}
+1000131a:	af00      	add	r7, sp, #0
+  SCU_GENERAL->PASSWD = SCU_GCU_PASSWD_PROT_DISABLE;
+1000131c:	4b05      	ldr	r3, [pc, #20]	; (10001334 <XMC_SCU_UnlockProtectedBits+0x1c>)
+1000131e:	22c0      	movs	r2, #192	; 0xc0
+10001320:	625a      	str	r2, [r3, #36]	; 0x24
+
+  while (((SCU_GENERAL->PASSWD) & SCU_GENERAL_PASSWD_PROTS_Msk))
+10001322:	46c0      	nop			; (mov r8, r8)
+10001324:	4b03      	ldr	r3, [pc, #12]	; (10001334 <XMC_SCU_UnlockProtectedBits+0x1c>)
+10001326:	6a5b      	ldr	r3, [r3, #36]	; 0x24
+10001328:	2204      	movs	r2, #4
+1000132a:	4013      	ands	r3, r2
+1000132c:	d1fa      	bne.n	10001324 <XMC_SCU_UnlockProtectedBits+0xc>
+  {
+    /* Loop until the lock is removed */
+  }
+}
+1000132e:	46bd      	mov	sp, r7
+10001330:	bd80      	pop	{r7, pc}
+10001332:	46c0      	nop			; (mov r8, r8)
+10001334:	40010000 	.word	0x40010000
+
+10001338 <XMC_SCU_CLOCK_Init>:
+}
+
+
+/* API which initializes the clock tree ofthe device */
+void XMC_SCU_CLOCK_Init(const XMC_SCU_CLOCK_CONFIG_t *const config)
+{
+10001338:	b580      	push	{r7, lr}
+1000133a:	b086      	sub	sp, #24
+1000133c:	af00      	add	r7, sp, #0
+1000133e:	6078      	str	r0, [r7, #4]
+  /* Remove protection */
+  XMC_SCU_UnlockProtectedBits();
+10001340:	f7ff ffea 	bl	10001318 <XMC_SCU_UnlockProtectedBits>
+
+#if (UC_SERIES == XMC14)
+  /* OSCHP source selection - OSC mode */
+
+  if (config->oschp_mode != XMC_SCU_CLOCK_OSCHP_MODE_DISABLED)
+10001344:	687b      	ldr	r3, [r7, #4]
+10001346:	799b      	ldrb	r3, [r3, #6]
+10001348:	2b30      	cmp	r3, #48	; 0x30
+1000134a:	d053      	beq.n	100013f4 <XMC_SCU_CLOCK_Init+0xbc>
+  {
+    if (OSCHP_GetFrequency() > 20000000U)
+1000134c:	f7ff ff14 	bl	10001178 <OSCHP_GetFrequency>
+10001350:	1e02      	subs	r2, r0, #0
+10001352:	4b49      	ldr	r3, [pc, #292]	; (10001478 <XMC_SCU_CLOCK_Init+0x140>)
+10001354:	429a      	cmp	r2, r3
+10001356:	d909      	bls.n	1000136c <XMC_SCU_CLOCK_Init+0x34>
+    {
+      SCU_ANALOG->ANAOSCHPCTRL |= (uint16_t)SCU_ANALOG_ANAOSCHPCTRL_HYSCTRL_Msk;
+10001358:	4a48      	ldr	r2, [pc, #288]	; (1000147c <XMC_SCU_CLOCK_Init+0x144>)
+1000135a:	4948      	ldr	r1, [pc, #288]	; (1000147c <XMC_SCU_CLOCK_Init+0x144>)
+1000135c:	2390      	movs	r3, #144	; 0x90
+1000135e:	5acb      	ldrh	r3, [r1, r3]
+10001360:	b29b      	uxth	r3, r3
+10001362:	2140      	movs	r1, #64	; 0x40
+10001364:	430b      	orrs	r3, r1
+10001366:	b299      	uxth	r1, r3
+10001368:	2390      	movs	r3, #144	; 0x90
+1000136a:	52d1      	strh	r1, [r2, r3]
+    }
+
+    SCU_ANALOG->ANAOSCHPCTRL = (uint16_t)(SCU_ANALOG->ANAOSCHPCTRL & ~(SCU_ANALOG_ANAOSCHPCTRL_SHBY_Msk | SCU_ANALOG_ANAOSCHPCTRL_MODE_Msk)) |
+1000136c:	4a43      	ldr	r2, [pc, #268]	; (1000147c <XMC_SCU_CLOCK_Init+0x144>)
+1000136e:	4943      	ldr	r1, [pc, #268]	; (1000147c <XMC_SCU_CLOCK_Init+0x144>)
+10001370:	2390      	movs	r3, #144	; 0x90
+10001372:	5acb      	ldrh	r3, [r1, r3]
+10001374:	b29b      	uxth	r3, r3
+10001376:	b29b      	uxth	r3, r3
+10001378:	1c19      	adds	r1, r3, #0
+1000137a:	2332      	movs	r3, #50	; 0x32
+1000137c:	4399      	bics	r1, r3
+1000137e:	1c0b      	adds	r3, r1, #0
+10001380:	b299      	uxth	r1, r3
+                               config->oschp_mode;
+10001382:	687b      	ldr	r3, [r7, #4]
+10001384:	799b      	ldrb	r3, [r3, #6]
+    if (OSCHP_GetFrequency() > 20000000U)
+    {
+      SCU_ANALOG->ANAOSCHPCTRL |= (uint16_t)SCU_ANALOG_ANAOSCHPCTRL_HYSCTRL_Msk;
+    }
+
+    SCU_ANALOG->ANAOSCHPCTRL = (uint16_t)(SCU_ANALOG->ANAOSCHPCTRL & ~(SCU_ANALOG_ANAOSCHPCTRL_SHBY_Msk | SCU_ANALOG_ANAOSCHPCTRL_MODE_Msk)) |
+10001386:	b29b      	uxth	r3, r3
+10001388:	430b      	orrs	r3, r1
+1000138a:	b29b      	uxth	r3, r3
+1000138c:	b299      	uxth	r1, r3
+1000138e:	2390      	movs	r3, #144	; 0x90
+10001390:	52d1      	strh	r1, [r2, r3]
+                               config->oschp_mode;
+
+    do
+    {
+      /* clear the status bit before restarting the detection. */
+      SCU_INTERRUPT->SRCLR1 = SCU_INTERRUPT_SRCLR1_LOECI_Msk;
+10001392:	4b3b      	ldr	r3, [pc, #236]	; (10001480 <XMC_SCU_CLOCK_Init+0x148>)
+10001394:	2202      	movs	r2, #2
+10001396:	629a      	str	r2, [r3, #40]	; 0x28
+
+      /* According to errata SCU_CM.023, to reset the XOWD it is needed to disable/enable the watchdog,
+         keeping in between at least one DCO2 cycle */
+
+      /* Disable XOWD */
+      SCU_CLK->OSCCSR &= ~SCU_CLK_OSCCSR_XOWDEN_Msk;
+10001398:	4b3a      	ldr	r3, [pc, #232]	; (10001484 <XMC_SCU_CLOCK_Init+0x14c>)
+1000139a:	4a3a      	ldr	r2, [pc, #232]	; (10001484 <XMC_SCU_CLOCK_Init+0x14c>)
+1000139c:	6952      	ldr	r2, [r2, #20]
+1000139e:	493a      	ldr	r1, [pc, #232]	; (10001488 <XMC_SCU_CLOCK_Init+0x150>)
+100013a0:	400a      	ands	r2, r1
+100013a2:	615a      	str	r2, [r3, #20]
+100013a4:	4b39      	ldr	r3, [pc, #228]	; (1000148c <XMC_SCU_CLOCK_Init+0x154>)
+100013a6:	617b      	str	r3, [r7, #20]
+100013a8:	e000      	b.n	100013ac <XMC_SCU_CLOCK_Init+0x74>
+/* This is a local function used to generate the delay until register get updated with new configured value.  */
+__STATIC_FORCEINLINE void delay(uint32_t cycles)
+{
+  while (--cycles > 0U)
+  {
+    __NOP();
+100013aa:	46c0      	nop			; (mov r8, r8)
+
+#if UC_SERIES == XMC14
+/* This is a local function used to generate the delay until register get updated with new configured value.  */
+__STATIC_FORCEINLINE void delay(uint32_t cycles)
+{
+  while (--cycles > 0U)
+100013ac:	697b      	ldr	r3, [r7, #20]
+100013ae:	3b01      	subs	r3, #1
+100013b0:	617b      	str	r3, [r7, #20]
+100013b2:	697b      	ldr	r3, [r7, #20]
+100013b4:	2b00      	cmp	r3, #0
+100013b6:	d1f8      	bne.n	100013aa <XMC_SCU_CLOCK_Init+0x72>
+      /* Clock domains synchronization, at least 1 DCO2 cycle */
+      /* delay value calculation assuming worst case DCO1=48Mhz and 3cycles per delay iteration */
+      delay(538);
+
+      /* Enable XOWD */
+      SCU_CLK->OSCCSR |= SCU_CLK_OSCCSR_XOWDEN_Msk | SCU_CLK_OSCCSR_XOWDRES_Msk;
+100013b8:	4b32      	ldr	r3, [pc, #200]	; (10001484 <XMC_SCU_CLOCK_Init+0x14c>)
+100013ba:	4a32      	ldr	r2, [pc, #200]	; (10001484 <XMC_SCU_CLOCK_Init+0x14c>)
+100013bc:	6952      	ldr	r2, [r2, #20]
+100013be:	21c0      	movs	r1, #192	; 0xc0
+100013c0:	0489      	lsls	r1, r1, #18
+100013c2:	430a      	orrs	r2, r1
+100013c4:	615a      	str	r2, [r3, #20]
+
+      /* OSCCSR.XOWDRES bit will be automatically reset to 0 after XOWD is reset */
+      while (SCU_CLK->OSCCSR & SCU_CLK_OSCCSR_XOWDRES_Msk);
+100013c6:	46c0      	nop			; (mov r8, r8)
+100013c8:	4b2e      	ldr	r3, [pc, #184]	; (10001484 <XMC_SCU_CLOCK_Init+0x14c>)
+100013ca:	695a      	ldr	r2, [r3, #20]
+100013cc:	2380      	movs	r3, #128	; 0x80
+100013ce:	045b      	lsls	r3, r3, #17
+100013d0:	4013      	ands	r3, r2
+100013d2:	d1f9      	bne.n	100013c8 <XMC_SCU_CLOCK_Init+0x90>
+100013d4:	4b2e      	ldr	r3, [pc, #184]	; (10001490 <XMC_SCU_CLOCK_Init+0x158>)
+100013d6:	613b      	str	r3, [r7, #16]
+100013d8:	e000      	b.n	100013dc <XMC_SCU_CLOCK_Init+0xa4>
+/* This is a local function used to generate the delay until register get updated with new configured value.  */
+__STATIC_FORCEINLINE void delay(uint32_t cycles)
+{
+  while (--cycles > 0U)
+  {
+    __NOP();
+100013da:	46c0      	nop			; (mov r8, r8)
+
+#if UC_SERIES == XMC14
+/* This is a local function used to generate the delay until register get updated with new configured value.  */
+__STATIC_FORCEINLINE void delay(uint32_t cycles)
+{
+  while (--cycles > 0U)
+100013dc:	693b      	ldr	r3, [r7, #16]
+100013de:	3b01      	subs	r3, #1
+100013e0:	613b      	str	r3, [r7, #16]
+100013e2:	693b      	ldr	r3, [r7, #16]
+100013e4:	2b00      	cmp	r3, #0
+100013e6:	d1f8      	bne.n	100013da <XMC_SCU_CLOCK_Init+0xa2>
+      /* Wait a at least 5 DCO2 cycles for the update of the XTAL OWD result */
+      /* delay value calculation assuming worst case DCO1=48Mhz and 3cycles per delay iteration */
+      delay(2685);
+
+    }
+    while (SCU_INTERRUPT->SRRAW1 & SCU_INTERRUPT_SRRAW1_LOECI_Msk);
+100013e8:	4b25      	ldr	r3, [pc, #148]	; (10001480 <XMC_SCU_CLOCK_Init+0x148>)
+100013ea:	6a1b      	ldr	r3, [r3, #32]
+100013ec:	2202      	movs	r2, #2
+100013ee:	4013      	ands	r3, r2
+100013f0:	d1cf      	bne.n	10001392 <XMC_SCU_CLOCK_Init+0x5a>
+100013f2:	e009      	b.n	10001408 <XMC_SCU_CLOCK_Init+0xd0>
+  }
+  else /* (config->oschp_mode == XMC_SCU_CLOCK_OSCHP_MODE_DISABLED) */
+  {
+    SCU_ANALOG->ANAOSCHPCTRL |= SCU_ANALOG_ANAOSCHPCTRL_MODE_Msk;
+100013f4:	4a21      	ldr	r2, [pc, #132]	; (1000147c <XMC_SCU_CLOCK_Init+0x144>)
+100013f6:	4921      	ldr	r1, [pc, #132]	; (1000147c <XMC_SCU_CLOCK_Init+0x144>)
+100013f8:	2390      	movs	r3, #144	; 0x90
+100013fa:	5acb      	ldrh	r3, [r1, r3]
+100013fc:	b29b      	uxth	r3, r3
+100013fe:	2130      	movs	r1, #48	; 0x30
+10001400:	430b      	orrs	r3, r1
+10001402:	b299      	uxth	r1, r3
+10001404:	2390      	movs	r3, #144	; 0x90
+10001406:	52d1      	strh	r1, [r2, r3]
+  }
+
+  SCU_ANALOG->ANAOSCLPCTRL = (uint16_t)config->osclp_mode;
+10001408:	4a1c      	ldr	r2, [pc, #112]	; (1000147c <XMC_SCU_CLOCK_Init+0x144>)
+1000140a:	687b      	ldr	r3, [r7, #4]
+1000140c:	79db      	ldrb	r3, [r3, #7]
+1000140e:	b299      	uxth	r1, r3
+10001410:	238c      	movs	r3, #140	; 0x8c
+10001412:	52d1      	strh	r1, [r2, r3]
+#ifndef DISABLE_WAIT_RTC_XTAL_OSC_STARTUP
+  if (config->osclp_mode == XMC_SCU_CLOCK_OSCLP_MODE_OSC)
+10001414:	687b      	ldr	r3, [r7, #4]
+10001416:	79db      	ldrb	r3, [r3, #7]
+10001418:	2b00      	cmp	r3, #0
+1000141a:	d109      	bne.n	10001430 <XMC_SCU_CLOCK_Init+0xf8>
+1000141c:	4b1d      	ldr	r3, [pc, #116]	; (10001494 <XMC_SCU_CLOCK_Init+0x15c>)
+1000141e:	60fb      	str	r3, [r7, #12]
+10001420:	e000      	b.n	10001424 <XMC_SCU_CLOCK_Init+0xec>
+/* This is a local function used to generate the delay until register get updated with new configured value.  */
+__STATIC_FORCEINLINE void delay(uint32_t cycles)
+{
+  while (--cycles > 0U)
+  {
+    __NOP();
+10001422:	46c0      	nop			; (mov r8, r8)
+
+#if UC_SERIES == XMC14
+/* This is a local function used to generate the delay until register get updated with new configured value.  */
+__STATIC_FORCEINLINE void delay(uint32_t cycles)
+{
+  while (--cycles > 0U)
+10001424:	68fb      	ldr	r3, [r7, #12]
+10001426:	3b01      	subs	r3, #1
+10001428:	60fb      	str	r3, [r7, #12]
+1000142a:	68fb      	ldr	r3, [r7, #12]
+1000142c:	2b00      	cmp	r3, #0
+1000142e:	d1f8      	bne.n	10001422 <XMC_SCU_CLOCK_Init+0xea>
+    /* Wait oscillator startup time ~5s */
+    delay(6500000);
+  }
+#endif
+
+  SCU_CLK->CLKCR1 = (SCU_CLK->CLKCR1 & ~SCU_CLK_CLKCR1_DCLKSEL_Msk) |
+10001430:	4b14      	ldr	r3, [pc, #80]	; (10001484 <XMC_SCU_CLOCK_Init+0x14c>)
+10001432:	4a14      	ldr	r2, [pc, #80]	; (10001484 <XMC_SCU_CLOCK_Init+0x14c>)
+10001434:	69d2      	ldr	r2, [r2, #28]
+10001436:	4918      	ldr	r1, [pc, #96]	; (10001498 <XMC_SCU_CLOCK_Init+0x160>)
+10001438:	400a      	ands	r2, r1
+                    config->dclk_src;
+1000143a:	6879      	ldr	r1, [r7, #4]
+1000143c:	8889      	ldrh	r1, [r1, #4]
+    /* Wait oscillator startup time ~5s */
+    delay(6500000);
+  }
+#endif
+
+  SCU_CLK->CLKCR1 = (SCU_CLK->CLKCR1 & ~SCU_CLK_CLKCR1_DCLKSEL_Msk) |
+1000143e:	430a      	orrs	r2, r1
+10001440:	61da      	str	r2, [r3, #28]
+                    config->dclk_src;
+
+#endif
+  /* Update PCLK selection mux. */
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_PCLKSEL_Msk | SCU_CLK_CLKCR_RTCCLKSEL_Msk)) |
+10001442:	4a10      	ldr	r2, [pc, #64]	; (10001484 <XMC_SCU_CLOCK_Init+0x14c>)
+10001444:	4b0f      	ldr	r3, [pc, #60]	; (10001484 <XMC_SCU_CLOCK_Init+0x14c>)
+10001446:	681b      	ldr	r3, [r3, #0]
+10001448:	4914      	ldr	r1, [pc, #80]	; (1000149c <XMC_SCU_CLOCK_Init+0x164>)
+1000144a:	4019      	ands	r1, r3
+                   config->rtc_src |
+1000144c:	687b      	ldr	r3, [r7, #4]
+1000144e:	68db      	ldr	r3, [r3, #12]
+  SCU_CLK->CLKCR1 = (SCU_CLK->CLKCR1 & ~SCU_CLK_CLKCR1_DCLKSEL_Msk) |
+                    config->dclk_src;
+
+#endif
+  /* Update PCLK selection mux. */
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_PCLKSEL_Msk | SCU_CLK_CLKCR_RTCCLKSEL_Msk)) |
+10001450:	4319      	orrs	r1, r3
+                   config->rtc_src |
+                   config->pclk_src;
+10001452:	687b      	ldr	r3, [r7, #4]
+10001454:	689b      	ldr	r3, [r3, #8]
+                    config->dclk_src;
+
+#endif
+  /* Update PCLK selection mux. */
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_PCLKSEL_Msk | SCU_CLK_CLKCR_RTCCLKSEL_Msk)) |
+                   config->rtc_src |
+10001456:	430b      	orrs	r3, r1
+  SCU_CLK->CLKCR1 = (SCU_CLK->CLKCR1 & ~SCU_CLK_CLKCR1_DCLKSEL_Msk) |
+                    config->dclk_src;
+
+#endif
+  /* Update PCLK selection mux. */
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_PCLKSEL_Msk | SCU_CLK_CLKCR_RTCCLKSEL_Msk)) |
+10001458:	6013      	str	r3, [r2, #0]
+                   config->rtc_src |
+                   config->pclk_src;
+
+  /* Close the lock opened above. */
+  XMC_SCU_LockProtectedBits();
+1000145a:	f7ff ff53 	bl	10001304 <XMC_SCU_LockProtectedBits>
+
+  /* Update the dividers now */
+  XMC_SCU_CLOCK_ScaleMCLKFrequency(config->idiv, config->fdiv);
+1000145e:	687b      	ldr	r3, [r7, #4]
+10001460:	789b      	ldrb	r3, [r3, #2]
+10001462:	1c1a      	adds	r2, r3, #0
+10001464:	687b      	ldr	r3, [r7, #4]
+10001466:	881b      	ldrh	r3, [r3, #0]
+10001468:	1c10      	adds	r0, r2, #0
+1000146a:	1c19      	adds	r1, r3, #0
+1000146c:	f000 f832 	bl	100014d4 <XMC_SCU_CLOCK_ScaleMCLKFrequency>
+
+}
+10001470:	46bd      	mov	sp, r7
+10001472:	b006      	add	sp, #24
+10001474:	bd80      	pop	{r7, pc}
+10001476:	46c0      	nop			; (mov r8, r8)
+10001478:	01312d00 	.word	0x01312d00
+1000147c:	40011000 	.word	0x40011000
+10001480:	40010038 	.word	0x40010038
+10001484:	40010300 	.word	0x40010300
+10001488:	fdffffff 	.word	0xfdffffff
+1000148c:	0000021a 	.word	0x0000021a
+10001490:	00000a7d 	.word	0x00000a7d
+10001494:	00632ea0 	.word	0x00632ea0
+10001498:	fffffdff 	.word	0xfffffdff
+1000149c:	fff0ffff 	.word	0xfff0ffff
+
+100014a0 <XMC_SCU_CLOCK_UngatePeripheralClock>:
+  XMC_SCU_LockProtectedBits();
+}
+
+/* API which ungates a clock note at its source */
+void XMC_SCU_CLOCK_UngatePeripheralClock(const XMC_SCU_PERIPHERAL_CLOCK_t peripheral)
+{
+100014a0:	b580      	push	{r7, lr}
+100014a2:	b082      	sub	sp, #8
+100014a4:	af00      	add	r7, sp, #0
+100014a6:	6078      	str	r0, [r7, #4]
+  XMC_SCU_UnlockProtectedBits();
+100014a8:	f7ff ff36 	bl	10001318 <XMC_SCU_UnlockProtectedBits>
+  SCU_CLK->CGATCLR0 |= (uint32_t)peripheral;
+100014ac:	4b08      	ldr	r3, [pc, #32]	; (100014d0 <XMC_SCU_CLOCK_UngatePeripheralClock+0x30>)
+100014ae:	4a08      	ldr	r2, [pc, #32]	; (100014d0 <XMC_SCU_CLOCK_UngatePeripheralClock+0x30>)
+100014b0:	6911      	ldr	r1, [r2, #16]
+100014b2:	687a      	ldr	r2, [r7, #4]
+100014b4:	430a      	orrs	r2, r1
+100014b6:	611a      	str	r2, [r3, #16]
+  while ((SCU_CLK->CLKCR) & SCU_CLK_CLKCR_VDDC2LOW_Msk)
+100014b8:	46c0      	nop			; (mov r8, r8)
+100014ba:	4b05      	ldr	r3, [pc, #20]	; (100014d0 <XMC_SCU_CLOCK_UngatePeripheralClock+0x30>)
+100014bc:	681a      	ldr	r2, [r3, #0]
+100014be:	2380      	movs	r3, #128	; 0x80
+100014c0:	05db      	lsls	r3, r3, #23
+100014c2:	4013      	ands	r3, r2
+100014c4:	d1f9      	bne.n	100014ba <XMC_SCU_CLOCK_UngatePeripheralClock+0x1a>
+  {
+    /* Wait voltage suply stabilization */
+  }
+  XMC_SCU_LockProtectedBits();
+100014c6:	f7ff ff1d 	bl	10001304 <XMC_SCU_LockProtectedBits>
+}
+100014ca:	46bd      	mov	sp, r7
+100014cc:	b002      	add	sp, #8
+100014ce:	bd80      	pop	{r7, pc}
+100014d0:	40010300 	.word	0x40010300
+
+100014d4 <XMC_SCU_CLOCK_ScaleMCLKFrequency>:
+}
+
+
+/* A utility routine which updates the fractional dividers in steps */
+void XMC_SCU_CLOCK_ScaleMCLKFrequency(uint32_t idiv, uint32_t fdiv)
+{
+100014d4:	b580      	push	{r7, lr}
+100014d6:	b084      	sub	sp, #16
+100014d8:	af00      	add	r7, sp, #0
+100014da:	6078      	str	r0, [r7, #4]
+100014dc:	6039      	str	r1, [r7, #0]
+  /* Find out current and target value of idiv */
+  uint32_t curr_idiv;
+
+  XMC_SCU_UnlockProtectedBits();
+100014de:	f7ff ff1b 	bl	10001318 <XMC_SCU_UnlockProtectedBits>
+
+  /* Take a snapshot of value already programmed into IDIV */
+  curr_idiv = (SCU_CLK->CLKCR & SCU_CLK_CLKCR_IDIV_Msk) >> SCU_CLK_CLKCR_IDIV_Pos;
+100014e2:	4b27      	ldr	r3, [pc, #156]	; (10001580 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xac>)
+100014e4:	681a      	ldr	r2, [r3, #0]
+100014e6:	23ff      	movs	r3, #255	; 0xff
+100014e8:	021b      	lsls	r3, r3, #8
+100014ea:	4013      	ands	r3, r2
+100014ec:	0a1b      	lsrs	r3, r3, #8
+100014ee:	60fb      	str	r3, [r7, #12]
+
+#if (UC_SERIES == XMC14)
+  SCU_CLK->CLKCR1 = (SCU_CLK->CLKCR1 & (uint32_t)~(SCU_CLK_CLKCR1_FDIV_Msk)) |
+100014f0:	4b23      	ldr	r3, [pc, #140]	; (10001580 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xac>)
+100014f2:	4a23      	ldr	r2, [pc, #140]	; (10001580 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xac>)
+100014f4:	69d2      	ldr	r2, [r2, #28]
+100014f6:	2103      	movs	r1, #3
+100014f8:	438a      	bics	r2, r1
+100014fa:	1c11      	adds	r1, r2, #0
+                    (uint32_t)((fdiv >> 8U) << SCU_CLK_CLKCR1_FDIV_Pos);
+100014fc:	683a      	ldr	r2, [r7, #0]
+100014fe:	0a12      	lsrs	r2, r2, #8
+
+  /* Take a snapshot of value already programmed into IDIV */
+  curr_idiv = (SCU_CLK->CLKCR & SCU_CLK_CLKCR_IDIV_Msk) >> SCU_CLK_CLKCR_IDIV_Pos;
+
+#if (UC_SERIES == XMC14)
+  SCU_CLK->CLKCR1 = (SCU_CLK->CLKCR1 & (uint32_t)~(SCU_CLK_CLKCR1_FDIV_Msk)) |
+10001500:	430a      	orrs	r2, r1
+10001502:	61da      	str	r2, [r3, #28]
+                    (uint32_t)((fdiv >> 8U) << SCU_CLK_CLKCR1_FDIV_Pos);
+
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_FDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+10001504:	4b1e      	ldr	r3, [pc, #120]	; (10001580 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xac>)
+10001506:	4a1e      	ldr	r2, [pc, #120]	; (10001580 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xac>)
+10001508:	6812      	ldr	r2, [r2, #0]
+1000150a:	491e      	ldr	r1, [pc, #120]	; (10001584 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xb0>)
+1000150c:	4011      	ands	r1, r2
+                   (uint32_t)((fdiv & 0xffU) << SCU_CLK_CLKCR_FDIV_Pos) |
+1000150e:	683a      	ldr	r2, [r7, #0]
+10001510:	20ff      	movs	r0, #255	; 0xff
+10001512:	4002      	ands	r2, r0
+
+#if (UC_SERIES == XMC14)
+  SCU_CLK->CLKCR1 = (SCU_CLK->CLKCR1 & (uint32_t)~(SCU_CLK_CLKCR1_FDIV_Msk)) |
+                    (uint32_t)((fdiv >> 8U) << SCU_CLK_CLKCR1_FDIV_Pos);
+
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_FDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+10001514:	430a      	orrs	r2, r1
+                   (uint32_t)((fdiv & 0xffU) << SCU_CLK_CLKCR_FDIV_Pos) |
+10001516:	491c      	ldr	r1, [pc, #112]	; (10001588 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xb4>)
+10001518:	430a      	orrs	r2, r1
+
+#if (UC_SERIES == XMC14)
+  SCU_CLK->CLKCR1 = (SCU_CLK->CLKCR1 & (uint32_t)~(SCU_CLK_CLKCR1_FDIV_Msk)) |
+                    (uint32_t)((fdiv >> 8U) << SCU_CLK_CLKCR1_FDIV_Pos);
+
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_FDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+1000151a:	601a      	str	r2, [r3, #0]
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_FDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+                   (uint32_t)(fdiv << SCU_CLK_CLKCR_FDIV_Pos) |
+                   (uint32_t)(1023UL << SCU_CLK_CLKCR_CNTADJ_Pos);
+#endif
+
+  while ((SCU_CLK->CLKCR)& SCU_CLK_CLKCR_VDDC2LOW_Msk)
+1000151c:	46c0      	nop			; (mov r8, r8)
+1000151e:	4b18      	ldr	r3, [pc, #96]	; (10001580 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xac>)
+10001520:	681a      	ldr	r2, [r3, #0]
+10001522:	2380      	movs	r3, #128	; 0x80
+10001524:	05db      	lsls	r3, r3, #23
+10001526:	4013      	ands	r3, r2
+10001528:	d1f9      	bne.n	1000151e <XMC_SCU_CLOCK_ScaleMCLKFrequency+0x4a>
+  {
+    /* Spin until the core supply stabilizes */
+  }
+
+  if (curr_idiv <= idiv)
+1000152a:	68fa      	ldr	r2, [r7, #12]
+1000152c:	687b      	ldr	r3, [r7, #4]
+1000152e:	429a      	cmp	r2, r3
+10001530:	d806      	bhi.n	10001540 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0x6c>
+  {
+    /* Requested IDIV is greater than currently programmed IDIV. So downscale the frequency */
+    XMC_SCU_CLOCK_lFrequencyDownScaling(curr_idiv, idiv);
+10001532:	68fa      	ldr	r2, [r7, #12]
+10001534:	687b      	ldr	r3, [r7, #4]
+10001536:	1c10      	adds	r0, r2, #0
+10001538:	1c19      	adds	r1, r3, #0
+1000153a:	f000 f853 	bl	100015e4 <XMC_SCU_CLOCK_lFrequencyDownScaling>
+1000153e:	e005      	b.n	1000154c <XMC_SCU_CLOCK_ScaleMCLKFrequency+0x78>
+  }
+  else
+  {
+    /* Requested IDIV is lower than currently programmed IDIV. So upscale the frequency */
+    XMC_SCU_CLOCK_lFrequencyUpScaling(curr_idiv, idiv);
+10001540:	68fa      	ldr	r2, [r7, #12]
+10001542:	687b      	ldr	r3, [r7, #4]
+10001544:	1c10      	adds	r0, r2, #0
+10001546:	1c19      	adds	r1, r3, #0
+10001548:	f000 f822 	bl	10001590 <XMC_SCU_CLOCK_lFrequencyUpScaling>
+  }
+
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_IDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+1000154c:	4b0c      	ldr	r3, [pc, #48]	; (10001580 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xac>)
+1000154e:	4a0c      	ldr	r2, [pc, #48]	; (10001580 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xac>)
+10001550:	6812      	ldr	r2, [r2, #0]
+10001552:	490e      	ldr	r1, [pc, #56]	; (1000158c <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xb8>)
+10001554:	4011      	ands	r1, r2
+                   (uint32_t)(idiv << SCU_CLK_CLKCR_IDIV_Pos) | (uint32_t)(1023UL << SCU_CLK_CLKCR_CNTADJ_Pos);
+10001556:	687a      	ldr	r2, [r7, #4]
+10001558:	0212      	lsls	r2, r2, #8
+  {
+    /* Requested IDIV is lower than currently programmed IDIV. So upscale the frequency */
+    XMC_SCU_CLOCK_lFrequencyUpScaling(curr_idiv, idiv);
+  }
+
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_IDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+1000155a:	430a      	orrs	r2, r1
+                   (uint32_t)(idiv << SCU_CLK_CLKCR_IDIV_Pos) | (uint32_t)(1023UL << SCU_CLK_CLKCR_CNTADJ_Pos);
+1000155c:	490a      	ldr	r1, [pc, #40]	; (10001588 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xb4>)
+1000155e:	430a      	orrs	r2, r1
+  {
+    /* Requested IDIV is lower than currently programmed IDIV. So upscale the frequency */
+    XMC_SCU_CLOCK_lFrequencyUpScaling(curr_idiv, idiv);
+  }
+
+  SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_IDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+10001560:	601a      	str	r2, [r3, #0]
+                   (uint32_t)(idiv << SCU_CLK_CLKCR_IDIV_Pos) | (uint32_t)(1023UL << SCU_CLK_CLKCR_CNTADJ_Pos);
+
+  while ((SCU_CLK->CLKCR) & SCU_CLK_CLKCR_VDDC2LOW_Msk)
+10001562:	46c0      	nop			; (mov r8, r8)
+10001564:	4b06      	ldr	r3, [pc, #24]	; (10001580 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0xac>)
+10001566:	681a      	ldr	r2, [r3, #0]
+10001568:	2380      	movs	r3, #128	; 0x80
+1000156a:	05db      	lsls	r3, r3, #23
+1000156c:	4013      	ands	r3, r2
+1000156e:	d1f9      	bne.n	10001564 <XMC_SCU_CLOCK_ScaleMCLKFrequency+0x90>
+  {
+    /* Wait voltage suply stabilization */
+  }
+
+  XMC_SCU_LockProtectedBits();
+10001570:	f7ff fec8 	bl	10001304 <XMC_SCU_LockProtectedBits>
+
+  SystemCoreClockUpdate();
+10001574:	f7ff fd9c 	bl	100010b0 <SystemCoreClockUpdate>
+
+}
+10001578:	46bd      	mov	sp, r7
+1000157a:	b004      	add	sp, #16
+1000157c:	bd80      	pop	{r7, pc}
+1000157e:	46c0      	nop			; (mov r8, r8)
+10001580:	40010300 	.word	0x40010300
+10001584:	c00fff00 	.word	0xc00fff00
+10001588:	3ff00000 	.word	0x3ff00000
+1000158c:	c00f00ff 	.word	0xc00f00ff
+
+10001590 <XMC_SCU_CLOCK_lFrequencyUpScaling>:
+
+/* Utility routine to perform frequency up scaling */
+static void XMC_SCU_CLOCK_lFrequencyUpScaling(uint32_t curr_idiv, uint32_t target_idiv)
+{
+10001590:	b580      	push	{r7, lr}
+10001592:	b082      	sub	sp, #8
+10001594:	af00      	add	r7, sp, #0
+10001596:	6078      	str	r0, [r7, #4]
+10001598:	6039      	str	r1, [r7, #0]
+  while (curr_idiv > (target_idiv * 4UL))
+1000159a:	e014      	b.n	100015c6 <XMC_SCU_CLOCK_lFrequencyUpScaling+0x36>
+  {
+    curr_idiv = (uint32_t)(curr_idiv >> 2UL);   /* Divide by 4. */
+1000159c:	687b      	ldr	r3, [r7, #4]
+1000159e:	089b      	lsrs	r3, r3, #2
+100015a0:	607b      	str	r3, [r7, #4]
+
+    SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_IDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+100015a2:	4b0d      	ldr	r3, [pc, #52]	; (100015d8 <XMC_SCU_CLOCK_lFrequencyUpScaling+0x48>)
+100015a4:	4a0c      	ldr	r2, [pc, #48]	; (100015d8 <XMC_SCU_CLOCK_lFrequencyUpScaling+0x48>)
+100015a6:	6812      	ldr	r2, [r2, #0]
+100015a8:	490c      	ldr	r1, [pc, #48]	; (100015dc <XMC_SCU_CLOCK_lFrequencyUpScaling+0x4c>)
+100015aa:	4011      	ands	r1, r2
+                     (uint32_t)(curr_idiv << SCU_CLK_CLKCR_IDIV_Pos) |
+100015ac:	687a      	ldr	r2, [r7, #4]
+100015ae:	0212      	lsls	r2, r2, #8
+{
+  while (curr_idiv > (target_idiv * 4UL))
+  {
+    curr_idiv = (uint32_t)(curr_idiv >> 2UL);   /* Divide by 4. */
+
+    SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_IDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+100015b0:	430a      	orrs	r2, r1
+                     (uint32_t)(curr_idiv << SCU_CLK_CLKCR_IDIV_Pos) |
+100015b2:	490b      	ldr	r1, [pc, #44]	; (100015e0 <XMC_SCU_CLOCK_lFrequencyUpScaling+0x50>)
+100015b4:	430a      	orrs	r2, r1
+{
+  while (curr_idiv > (target_idiv * 4UL))
+  {
+    curr_idiv = (uint32_t)(curr_idiv >> 2UL);   /* Divide by 4. */
+
+    SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_IDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+100015b6:	601a      	str	r2, [r3, #0]
+                     (uint32_t)(curr_idiv << SCU_CLK_CLKCR_IDIV_Pos) |
+                     (uint32_t)(1023UL << SCU_CLK_CLKCR_CNTADJ_Pos);
+
+    while (SCU_CLK->CLKCR & SCU_CLK_CLKCR_VDDC2LOW_Msk)
+100015b8:	46c0      	nop			; (mov r8, r8)
+100015ba:	4b07      	ldr	r3, [pc, #28]	; (100015d8 <XMC_SCU_CLOCK_lFrequencyUpScaling+0x48>)
+100015bc:	681a      	ldr	r2, [r3, #0]
+100015be:	2380      	movs	r3, #128	; 0x80
+100015c0:	05db      	lsls	r3, r3, #23
+100015c2:	4013      	ands	r3, r2
+100015c4:	d1f9      	bne.n	100015ba <XMC_SCU_CLOCK_lFrequencyUpScaling+0x2a>
+}
+
+/* Utility routine to perform frequency up scaling */
+static void XMC_SCU_CLOCK_lFrequencyUpScaling(uint32_t curr_idiv, uint32_t target_idiv)
+{
+  while (curr_idiv > (target_idiv * 4UL))
+100015c6:	683b      	ldr	r3, [r7, #0]
+100015c8:	009a      	lsls	r2, r3, #2
+100015ca:	687b      	ldr	r3, [r7, #4]
+100015cc:	429a      	cmp	r2, r3
+100015ce:	d3e5      	bcc.n	1000159c <XMC_SCU_CLOCK_lFrequencyUpScaling+0xc>
+    while (SCU_CLK->CLKCR & SCU_CLK_CLKCR_VDDC2LOW_Msk)
+    {
+      /* Wait voltage suply stabilization */
+    }
+  }
+}
+100015d0:	46bd      	mov	sp, r7
+100015d2:	b002      	add	sp, #8
+100015d4:	bd80      	pop	{r7, pc}
+100015d6:	46c0      	nop			; (mov r8, r8)
+100015d8:	40010300 	.word	0x40010300
+100015dc:	c00f00ff 	.word	0xc00f00ff
+100015e0:	3ff00000 	.word	0x3ff00000
+
+100015e4 <XMC_SCU_CLOCK_lFrequencyDownScaling>:
+
+/* Utility routine to perform frequency down scaling */
+static void XMC_SCU_CLOCK_lFrequencyDownScaling(uint32_t curr_idiv, uint32_t target_idiv)
+{
+100015e4:	b580      	push	{r7, lr}
+100015e6:	b082      	sub	sp, #8
+100015e8:	af00      	add	r7, sp, #0
+100015ea:	6078      	str	r0, [r7, #4]
+100015ec:	6039      	str	r1, [r7, #0]
+
+  while ((curr_idiv * 4UL) < target_idiv)
+100015ee:	e019      	b.n	10001624 <XMC_SCU_CLOCK_lFrequencyDownScaling+0x40>
+  {
+    if (0U == curr_idiv)
+100015f0:	687b      	ldr	r3, [r7, #4]
+100015f2:	2b00      	cmp	r3, #0
+100015f4:	d101      	bne.n	100015fa <XMC_SCU_CLOCK_lFrequencyDownScaling+0x16>
+    {
+      curr_idiv = 1U;
+100015f6:	2301      	movs	r3, #1
+100015f8:	607b      	str	r3, [r7, #4]
+    }
+    curr_idiv  = (uint32_t)(curr_idiv << 2UL);   /* Multiply by 4. */
+100015fa:	687b      	ldr	r3, [r7, #4]
+100015fc:	009b      	lsls	r3, r3, #2
+100015fe:	607b      	str	r3, [r7, #4]
+    SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_IDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+10001600:	4b0c      	ldr	r3, [pc, #48]	; (10001634 <XMC_SCU_CLOCK_lFrequencyDownScaling+0x50>)
+10001602:	4a0c      	ldr	r2, [pc, #48]	; (10001634 <XMC_SCU_CLOCK_lFrequencyDownScaling+0x50>)
+10001604:	6812      	ldr	r2, [r2, #0]
+10001606:	490c      	ldr	r1, [pc, #48]	; (10001638 <XMC_SCU_CLOCK_lFrequencyDownScaling+0x54>)
+10001608:	4011      	ands	r1, r2
+                     (uint32_t)(curr_idiv << SCU_CLK_CLKCR_IDIV_Pos) |
+1000160a:	687a      	ldr	r2, [r7, #4]
+1000160c:	0212      	lsls	r2, r2, #8
+    if (0U == curr_idiv)
+    {
+      curr_idiv = 1U;
+    }
+    curr_idiv  = (uint32_t)(curr_idiv << 2UL);   /* Multiply by 4. */
+    SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_IDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+1000160e:	430a      	orrs	r2, r1
+                     (uint32_t)(curr_idiv << SCU_CLK_CLKCR_IDIV_Pos) |
+10001610:	490a      	ldr	r1, [pc, #40]	; (1000163c <XMC_SCU_CLOCK_lFrequencyDownScaling+0x58>)
+10001612:	430a      	orrs	r2, r1
+    if (0U == curr_idiv)
+    {
+      curr_idiv = 1U;
+    }
+    curr_idiv  = (uint32_t)(curr_idiv << 2UL);   /* Multiply by 4. */
+    SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_IDIV_Msk | SCU_CLK_CLKCR_CNTADJ_Msk)) |
+10001614:	601a      	str	r2, [r3, #0]
+                     (uint32_t)(curr_idiv << SCU_CLK_CLKCR_IDIV_Pos) |
+                     (uint32_t)(1023UL << SCU_CLK_CLKCR_CNTADJ_Pos);
+
+    while (SCU_CLK->CLKCR & SCU_CLK_CLKCR_VDDC2LOW_Msk)
+10001616:	46c0      	nop			; (mov r8, r8)
+10001618:	4b06      	ldr	r3, [pc, #24]	; (10001634 <XMC_SCU_CLOCK_lFrequencyDownScaling+0x50>)
+1000161a:	681a      	ldr	r2, [r3, #0]
+1000161c:	2380      	movs	r3, #128	; 0x80
+1000161e:	05db      	lsls	r3, r3, #23
+10001620:	4013      	ands	r3, r2
+10001622:	d1f9      	bne.n	10001618 <XMC_SCU_CLOCK_lFrequencyDownScaling+0x34>
+
+/* Utility routine to perform frequency down scaling */
+static void XMC_SCU_CLOCK_lFrequencyDownScaling(uint32_t curr_idiv, uint32_t target_idiv)
+{
+
+  while ((curr_idiv * 4UL) < target_idiv)
+10001624:	687b      	ldr	r3, [r7, #4]
+10001626:	009a      	lsls	r2, r3, #2
+10001628:	683b      	ldr	r3, [r7, #0]
+1000162a:	429a      	cmp	r2, r3
+1000162c:	d3e0      	bcc.n	100015f0 <XMC_SCU_CLOCK_lFrequencyDownScaling+0xc>
+    while (SCU_CLK->CLKCR & SCU_CLK_CLKCR_VDDC2LOW_Msk)
+    {
+      /* Wait voltage suply stabilization */
+    }
+  }
+}
+1000162e:	46bd      	mov	sp, r7
+10001630:	b002      	add	sp, #8
+10001632:	bd80      	pop	{r7, pc}
+10001634:	40010300 	.word	0x40010300
+10001638:	c00f00ff 	.word	0xc00f00ff
+1000163c:	3ff00000 	.word	0x3ff00000
+
+10001640 <XMC_SCU_SetInterruptControl>:
+  return (bool)((SCU_ANALOG->ANASYNC2 & SCU_ANALOG_ANASYNC2_SYNC_READY_Msk) != 0U);
+}
+
+/* This function selects service request source for a NVIC interrupt node */
+void XMC_SCU_SetInterruptControl(uint8_t irq_number, XMC_SCU_IRQCTRL_t source)
+{
+10001640:	b580      	push	{r7, lr}
+10001642:	b082      	sub	sp, #8
+10001644:	af00      	add	r7, sp, #0
+10001646:	1c02      	adds	r2, r0, #0
+10001648:	1dfb      	adds	r3, r7, #7
+1000164a:	701a      	strb	r2, [r3, #0]
+1000164c:	1d3b      	adds	r3, r7, #4
+1000164e:	1c0a      	adds	r2, r1, #0
+10001650:	801a      	strh	r2, [r3, #0]
+  XMC_ASSERT("XMC_SCU_SetInterruptControl: Invalid irq_number", irq_number < 32);
+  XMC_ASSERT("XMC_SCU_SetInterruptControl: Invalid source", (source >> 8) == irq_number);
+
+  source &= 0x3U;
+10001652:	1d3b      	adds	r3, r7, #4
+10001654:	1d3a      	adds	r2, r7, #4
+10001656:	8812      	ldrh	r2, [r2, #0]
+10001658:	2103      	movs	r1, #3
+1000165a:	400a      	ands	r2, r1
+1000165c:	801a      	strh	r2, [r3, #0]
+  if (irq_number < 16U)
+1000165e:	1dfb      	adds	r3, r7, #7
+10001660:	781b      	ldrb	r3, [r3, #0]
+10001662:	2b0f      	cmp	r3, #15
+10001664:	d813      	bhi.n	1000168e <XMC_SCU_SetInterruptControl+0x4e>
+  {
+    SCU_GENERAL->INTCR0 = (SCU_GENERAL->INTCR0 & ~(SCU_GENERAL_INTCR_INTSEL_Msk << (irq_number * SCU_GENERAL_INTCR_INTSEL_Size))) |
+10001666:	4b18      	ldr	r3, [pc, #96]	; (100016c8 <XMC_SCU_SetInterruptControl+0x88>)
+10001668:	4a17      	ldr	r2, [pc, #92]	; (100016c8 <XMC_SCU_SetInterruptControl+0x88>)
+1000166a:	6ed2      	ldr	r2, [r2, #108]	; 0x6c
+1000166c:	1df9      	adds	r1, r7, #7
+1000166e:	7809      	ldrb	r1, [r1, #0]
+10001670:	0049      	lsls	r1, r1, #1
+10001672:	1c08      	adds	r0, r1, #0
+10001674:	2103      	movs	r1, #3
+10001676:	4081      	lsls	r1, r0
+10001678:	43c9      	mvns	r1, r1
+1000167a:	400a      	ands	r2, r1
+                          (source << (irq_number * SCU_GENERAL_INTCR_INTSEL_Size));
+1000167c:	1d39      	adds	r1, r7, #4
+1000167e:	8809      	ldrh	r1, [r1, #0]
+10001680:	1df8      	adds	r0, r7, #7
+10001682:	7800      	ldrb	r0, [r0, #0]
+10001684:	0040      	lsls	r0, r0, #1
+10001686:	4081      	lsls	r1, r0
+  XMC_ASSERT("XMC_SCU_SetInterruptControl: Invalid source", (source >> 8) == irq_number);
+
+  source &= 0x3U;
+  if (irq_number < 16U)
+  {
+    SCU_GENERAL->INTCR0 = (SCU_GENERAL->INTCR0 & ~(SCU_GENERAL_INTCR_INTSEL_Msk << (irq_number * SCU_GENERAL_INTCR_INTSEL_Size))) |
+10001688:	430a      	orrs	r2, r1
+1000168a:	66da      	str	r2, [r3, #108]	; 0x6c
+1000168c:	e018      	b.n	100016c0 <XMC_SCU_SetInterruptControl+0x80>
+                          (source << (irq_number * SCU_GENERAL_INTCR_INTSEL_Size));
+  }
+  else
+  {
+    irq_number &= 0x0fU;
+1000168e:	1dfb      	adds	r3, r7, #7
+10001690:	1dfa      	adds	r2, r7, #7
+10001692:	7812      	ldrb	r2, [r2, #0]
+10001694:	210f      	movs	r1, #15
+10001696:	400a      	ands	r2, r1
+10001698:	701a      	strb	r2, [r3, #0]
+    SCU_GENERAL->INTCR1 = (SCU_GENERAL->INTCR1 & ~(SCU_GENERAL_INTCR_INTSEL_Msk << (irq_number  * SCU_GENERAL_INTCR_INTSEL_Size))) |
+1000169a:	4b0b      	ldr	r3, [pc, #44]	; (100016c8 <XMC_SCU_SetInterruptControl+0x88>)
+1000169c:	4a0a      	ldr	r2, [pc, #40]	; (100016c8 <XMC_SCU_SetInterruptControl+0x88>)
+1000169e:	6f12      	ldr	r2, [r2, #112]	; 0x70
+100016a0:	1df9      	adds	r1, r7, #7
+100016a2:	7809      	ldrb	r1, [r1, #0]
+100016a4:	0049      	lsls	r1, r1, #1
+100016a6:	1c08      	adds	r0, r1, #0
+100016a8:	2103      	movs	r1, #3
+100016aa:	4081      	lsls	r1, r0
+100016ac:	43c9      	mvns	r1, r1
+100016ae:	400a      	ands	r2, r1
+                          (source << (irq_number  * SCU_GENERAL_INTCR_INTSEL_Size));
+100016b0:	1d39      	adds	r1, r7, #4
+100016b2:	8809      	ldrh	r1, [r1, #0]
+100016b4:	1df8      	adds	r0, r7, #7
+100016b6:	7800      	ldrb	r0, [r0, #0]
+100016b8:	0040      	lsls	r0, r0, #1
+100016ba:	4081      	lsls	r1, r0
+                          (source << (irq_number * SCU_GENERAL_INTCR_INTSEL_Size));
+  }
+  else
+  {
+    irq_number &= 0x0fU;
+    SCU_GENERAL->INTCR1 = (SCU_GENERAL->INTCR1 & ~(SCU_GENERAL_INTCR_INTSEL_Msk << (irq_number  * SCU_GENERAL_INTCR_INTSEL_Size))) |
+100016bc:	430a      	orrs	r2, r1
+100016be:	671a      	str	r2, [r3, #112]	; 0x70
+                          (source << (irq_number  * SCU_GENERAL_INTCR_INTSEL_Size));
+  }
+}
+100016c0:	46bd      	mov	sp, r7
+100016c2:	b002      	add	sp, #8
+100016c4:	bd80      	pop	{r7, pc}
+100016c6:	46c0      	nop			; (mov r8, r8)
+100016c8:	40010000 	.word	0x40010000
+
+100016cc <XMC_CCU4_StartPrescaler>:
+ * \par<b>Related APIs:</b><br>
+ * XMC_CCU4_Init()<BR> XMC_CCU4_EnableClock()<BR> XMC_CCU4_DisableClock()<BR> XMC_CCU4_StartPrescaler()<BR>
+ * XMC_CCU4_StopPrescaler().
+ */
+__STATIC_INLINE void XMC_CCU4_StartPrescaler(XMC_CCU4_MODULE_t *const module)
+{
+100016cc:	b580      	push	{r7, lr}
+100016ce:	b082      	sub	sp, #8
+100016d0:	af00      	add	r7, sp, #0
+100016d2:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("XMC_CCU4_StartPrescaler:Invalid Module Pointer", XMC_CCU4_IsValidModule(module));
+  module->GIDLC = (uint32_t) CCU4_GIDLC_SPRB_Msk;
+100016d4:	687b      	ldr	r3, [r7, #4]
+100016d6:	2280      	movs	r2, #128	; 0x80
+100016d8:	0052      	lsls	r2, r2, #1
+100016da:	60da      	str	r2, [r3, #12]
+}
+100016dc:	46bd      	mov	sp, r7
+100016de:	b002      	add	sp, #8
+100016e0:	bd80      	pop	{r7, pc}
+100016e2:	46c0      	nop			; (mov r8, r8)
+
+100016e4 <XMC_CCU4_lUngateClock>:
+    XMC_ASSERT("XMC_CCU4_lGateClock:Invalid Module Pointer", 0);
+  }
+}
+
+__STATIC_INLINE void XMC_CCU4_lUngateClock(const XMC_CCU4_MODULE_t *const module)
+{
+100016e4:	b580      	push	{r7, lr}
+100016e6:	b082      	sub	sp, #8
+100016e8:	af00      	add	r7, sp, #0
+100016ea:	6078      	str	r0, [r7, #4]
+  if (module == CCU40)
+100016ec:	687b      	ldr	r3, [r7, #4]
+100016ee:	4a09      	ldr	r2, [pc, #36]	; (10001714 <XMC_CCU4_lUngateClock+0x30>)
+100016f0:	4293      	cmp	r3, r2
+100016f2:	d103      	bne.n	100016fc <XMC_CCU4_lUngateClock+0x18>
+  {
+    XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_CCU40);
+100016f4:	2004      	movs	r0, #4
+100016f6:	f7ff fed3 	bl	100014a0 <XMC_SCU_CLOCK_UngatePeripheralClock>
+100016fa:	e008      	b.n	1000170e <XMC_CCU4_lUngateClock+0x2a>
+  }
+#if defined(CCU41)
+  else if (module == CCU41)
+100016fc:	687b      	ldr	r3, [r7, #4]
+100016fe:	4a06      	ldr	r2, [pc, #24]	; (10001718 <XMC_CCU4_lUngateClock+0x34>)
+10001700:	4293      	cmp	r3, r2
+10001702:	d104      	bne.n	1000170e <XMC_CCU4_lUngateClock+0x2a>
+  {
+    XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_CCU41);
+10001704:	2380      	movs	r3, #128	; 0x80
+10001706:	029b      	lsls	r3, r3, #10
+10001708:	1c18      	adds	r0, r3, #0
+1000170a:	f7ff fec9 	bl	100014a0 <XMC_SCU_CLOCK_UngatePeripheralClock>
+#endif
+  else
+  {
+    XMC_ASSERT("XMC_CCU4_lUngateClock:Invalid Module Pointer", 0);
+  }
+}
+1000170e:	46bd      	mov	sp, r7
+10001710:	b002      	add	sp, #8
+10001712:	bd80      	pop	{r7, pc}
+10001714:	48040000 	.word	0x48040000
+10001718:	48044000 	.word	0x48044000
+
+1000171c <XMC_CCU4_EnableModule>:
+/*********************************************************************************************************************
+ * API IMPLEMENTATION
+ ********************************************************************************************************************/
+
+void XMC_CCU4_EnableModule(XMC_CCU4_MODULE_t *const module)
+{
+1000171c:	b580      	push	{r7, lr}
+1000171e:	b082      	sub	sp, #8
+10001720:	af00      	add	r7, sp, #0
+10001722:	6078      	str	r0, [r7, #4]
+  /* Enable CCU4 module clock */
+  XMC_SCU_CLOCK_EnableClock(XMC_SCU_CLOCK_CCU);
+#endif
+
+#if defined(CLOCK_GATING_SUPPORTED)
+  XMC_CCU4_lUngateClock(module);
+10001724:	687b      	ldr	r3, [r7, #4]
+10001726:	1c18      	adds	r0, r3, #0
+10001728:	f7ff ffdc 	bl	100016e4 <XMC_CCU4_lUngateClock>
+#endif
+
+#if defined(PERIPHERAL_RESET_SUPPORTED)
+  XMC_CCU4_lDeassertReset(module);
+#endif
+}
+1000172c:	46bd      	mov	sp, r7
+1000172e:	b002      	add	sp, #8
+10001730:	bd80      	pop	{r7, pc}
+10001732:	46c0      	nop			; (mov r8, r8)
+
+10001734 <XMC_CCU4_Init>:
+#endif
+}
+
+/* API to initialize CCU4 global resources  */
+void XMC_CCU4_Init(XMC_CCU4_MODULE_t *const module, const XMC_CCU4_SLICE_MCMS_ACTION_t mcs_action)
+{
+10001734:	b580      	push	{r7, lr}
+10001736:	b084      	sub	sp, #16
+10001738:	af00      	add	r7, sp, #0
+1000173a:	6078      	str	r0, [r7, #4]
+1000173c:	1c0a      	adds	r2, r1, #0
+1000173e:	1cfb      	adds	r3, r7, #3
+10001740:	701a      	strb	r2, [r3, #0]
+
+  XMC_ASSERT("XMC_CCU4_Init:Invalid module pointer", XMC_CCU4_IsValidModule(module));
+  XMC_ASSERT("XMC_CCU4_Init:Invalid mcs action", XMC_CCU4_SLICE_CHECK_MCS_ACTION(mcs_action));
+
+  /* Enable CCU4 module */
+  XMC_CCU4_EnableModule(module);
+10001742:	687b      	ldr	r3, [r7, #4]
+10001744:	1c18      	adds	r0, r3, #0
+10001746:	f7ff ffe9 	bl	1000171c <XMC_CCU4_EnableModule>
+  /* Start the prescaler */
+  XMC_CCU4_StartPrescaler(module);
+1000174a:	687b      	ldr	r3, [r7, #4]
+1000174c:	1c18      	adds	r0, r3, #0
+1000174e:	f7ff ffbd 	bl	100016cc <XMC_CCU4_StartPrescaler>
+
+  gctrl = module->GCTRL;
+10001752:	687b      	ldr	r3, [r7, #4]
+10001754:	681b      	ldr	r3, [r3, #0]
+10001756:	60fb      	str	r3, [r7, #12]
+  gctrl &= ~((uint32_t) CCU4_GCTRL_MSDE_Msk);
+10001758:	68fb      	ldr	r3, [r7, #12]
+1000175a:	4a07      	ldr	r2, [pc, #28]	; (10001778 <XMC_CCU4_Init+0x44>)
+1000175c:	4013      	ands	r3, r2
+1000175e:	60fb      	str	r3, [r7, #12]
+  gctrl |= ((uint32_t) mcs_action) << CCU4_GCTRL_MSDE_Pos;
+10001760:	1cfb      	adds	r3, r7, #3
+10001762:	781b      	ldrb	r3, [r3, #0]
+10001764:	039b      	lsls	r3, r3, #14
+10001766:	68fa      	ldr	r2, [r7, #12]
+10001768:	4313      	orrs	r3, r2
+1000176a:	60fb      	str	r3, [r7, #12]
+
+  module->GCTRL = gctrl;
+1000176c:	687b      	ldr	r3, [r7, #4]
+1000176e:	68fa      	ldr	r2, [r7, #12]
+10001770:	601a      	str	r2, [r3, #0]
+}
+10001772:	46bd      	mov	sp, r7
+10001774:	b004      	add	sp, #16
+10001776:	bd80      	pop	{r7, pc}
+10001778:	ffff3fff 	.word	0xffff3fff
+
+1000177c <XMC_CCU4_SLICE_CompareInit>:
+}
+
+/* API to configure CC4 Slice as Timer */
+void XMC_CCU4_SLICE_CompareInit(XMC_CCU4_SLICE_t *const slice,
+                                const XMC_CCU4_SLICE_COMPARE_CONFIG_t *const compare_init)
+{
+1000177c:	b580      	push	{r7, lr}
+1000177e:	b082      	sub	sp, #8
+10001780:	af00      	add	r7, sp, #0
+10001782:	6078      	str	r0, [r7, #4]
+10001784:	6039      	str	r1, [r7, #0]
+  XMC_ASSERT("XMC_CCU4_SLICE_CompareInit:Invalid Slice Pointer", XMC_CCU4_IsValidSlice(slice));
+  XMC_ASSERT("XMC_CCU4_SLICE_CompareInit:Compare Init Pointer is NULL",
+             (XMC_CCU4_SLICE_COMPARE_CONFIG_t *) NULL != compare_init);
+
+  /* Program the timer mode */
+  slice->TC = compare_init->tc;
+10001786:	683b      	ldr	r3, [r7, #0]
+10001788:	681a      	ldr	r2, [r3, #0]
+1000178a:	687b      	ldr	r3, [r7, #4]
+1000178c:	615a      	str	r2, [r3, #20]
+  /* Enable the timer concatenation */
+  slice->CMC = ((uint32_t) compare_init->timer_concatenation << CCU4_CC4_CMC_TCE_Pos);
+1000178e:	683b      	ldr	r3, [r7, #0]
+10001790:	795b      	ldrb	r3, [r3, #5]
+10001792:	069b      	lsls	r3, r3, #26
+10001794:	0fdb      	lsrs	r3, r3, #31
+10001796:	b2db      	uxtb	r3, r3
+10001798:	051a      	lsls	r2, r3, #20
+1000179a:	687b      	ldr	r3, [r7, #4]
+1000179c:	605a      	str	r2, [r3, #4]
+  /* Program initial prescaler divider value */
+  slice->PSC = (uint32_t) compare_init->prescaler_initval;
+1000179e:	683b      	ldr	r3, [r7, #0]
+100017a0:	791b      	ldrb	r3, [r3, #4]
+100017a2:	071b      	lsls	r3, r3, #28
+100017a4:	0f1b      	lsrs	r3, r3, #28
+100017a6:	b2db      	uxtb	r3, r3
+100017a8:	1c1a      	adds	r2, r3, #0
+100017aa:	687b      	ldr	r3, [r7, #4]
+100017ac:	625a      	str	r2, [r3, #36]	; 0x24
+  /* Program the dither compare value */
+  slice->DITS = (uint32_t) compare_init->dither_limit;
+100017ae:	683b      	ldr	r3, [r7, #0]
+100017b0:	795b      	ldrb	r3, [r3, #5]
+100017b2:	071b      	lsls	r3, r3, #28
+100017b4:	0f1b      	lsrs	r3, r3, #28
+100017b6:	b2db      	uxtb	r3, r3
+100017b8:	1c1a      	adds	r2, r3, #0
+100017ba:	687b      	ldr	r3, [r7, #4]
+100017bc:	621a      	str	r2, [r3, #32]
+  /* Program timer output passive level */
+  slice->PSL = (uint32_t) compare_init->passive_level;
+100017be:	683b      	ldr	r3, [r7, #0]
+100017c0:	795b      	ldrb	r3, [r3, #5]
+100017c2:	06db      	lsls	r3, r3, #27
+100017c4:	0fdb      	lsrs	r3, r3, #31
+100017c6:	b2db      	uxtb	r3, r3
+100017c8:	1c1a      	adds	r2, r3, #0
+100017ca:	687b      	ldr	r3, [r7, #4]
+100017cc:	619a      	str	r2, [r3, #24]
+  /* Program floating prescaler compare value */
+  slice->FPCS = (uint32_t) compare_init->float_limit;
+100017ce:	683b      	ldr	r3, [r7, #0]
+100017d0:	791b      	ldrb	r3, [r3, #4]
+100017d2:	061b      	lsls	r3, r3, #24
+100017d4:	0f1b      	lsrs	r3, r3, #28
+100017d6:	b2db      	uxtb	r3, r3
+100017d8:	1c1a      	adds	r2, r3, #0
+100017da:	687b      	ldr	r3, [r7, #4]
+100017dc:	62da      	str	r2, [r3, #44]	; 0x2c
+}
+100017de:	46bd      	mov	sp, r7
+100017e0:	b002      	add	sp, #8
+100017e2:	bd80      	pop	{r7, pc}
+
+100017e4 <XMC_CCU4_SLICE_SetInterruptNode>:
+
+/* Binds a capcom event to an NVIC node  */
+void XMC_CCU4_SLICE_SetInterruptNode(XMC_CCU4_SLICE_t *const slice,
+                                     const XMC_CCU4_SLICE_IRQ_ID_t event,
+                                     const XMC_CCU4_SLICE_SR_ID_t sr)
+{
+100017e4:	b580      	push	{r7, lr}
+100017e6:	b086      	sub	sp, #24
+100017e8:	af00      	add	r7, sp, #0
+100017ea:	6078      	str	r0, [r7, #4]
+100017ec:	1c08      	adds	r0, r1, #0
+100017ee:	1c11      	adds	r1, r2, #0
+100017f0:	1cfb      	adds	r3, r7, #3
+100017f2:	1c02      	adds	r2, r0, #0
+100017f4:	701a      	strb	r2, [r3, #0]
+100017f6:	1cbb      	adds	r3, r7, #2
+100017f8:	1c0a      	adds	r2, r1, #0
+100017fa:	701a      	strb	r2, [r3, #0]
+
+  XMC_ASSERT("XMC_CCU4_SLICE_SetInterruptNode:Invalid Slice Pointer", XMC_CCU4_IsValidSlice(slice));
+  XMC_ASSERT("XMC_CCU4_SLICE_SetInterruptNode:Invalid SR ID ", XMC_CCU4_SLICE_CHECK_SR_ID(sr));
+  XMC_ASSERT("XMC_CCU4_SLICE_SetInterruptNode:Invalid event", XMC_CCU4_SLICE_CHECK_INTERRUPT(event));
+
+  switch (event)
+100017fc:	1cfb      	adds	r3, r7, #3
+100017fe:	781b      	ldrb	r3, [r3, #0]
+10001800:	2b0b      	cmp	r3, #11
+10001802:	d820      	bhi.n	10001846 <XMC_CCU4_SLICE_SetInterruptNode+0x62>
+10001804:	009a      	lsls	r2, r3, #2
+10001806:	4b20      	ldr	r3, [pc, #128]	; (10001888 <XMC_CCU4_SLICE_SetInterruptNode+0xa4>)
+10001808:	18d3      	adds	r3, r2, r3
+1000180a:	681b      	ldr	r3, [r3, #0]
+1000180c:	469f      	mov	pc, r3
+  {
+    case XMC_CCU4_SLICE_IRQ_ID_PERIOD_MATCH:
+    case XMC_CCU4_SLICE_IRQ_ID_ONE_MATCH:
+      mask = ((uint32_t) CCU4_CC4_SRS_POSR_Msk);
+1000180e:	2303      	movs	r3, #3
+10001810:	613b      	str	r3, [r7, #16]
+      pos  = CCU4_CC4_SRS_POSR_Pos;
+10001812:	2300      	movs	r3, #0
+10001814:	617b      	str	r3, [r7, #20]
+      break;
+10001816:	e01b      	b.n	10001850 <XMC_CCU4_SLICE_SetInterruptNode+0x6c>
+
+    case XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_UP:
+    case XMC_CCU4_SLICE_IRQ_ID_COMPARE_MATCH_DOWN:
+      mask = ((uint32_t) CCU4_CC4_SRS_CMSR_Msk);
+10001818:	230c      	movs	r3, #12
+1000181a:	613b      	str	r3, [r7, #16]
+      pos  = CCU4_CC4_SRS_CMSR_Pos;
+1000181c:	2302      	movs	r3, #2
+1000181e:	617b      	str	r3, [r7, #20]
+      break;
+10001820:	e016      	b.n	10001850 <XMC_CCU4_SLICE_SetInterruptNode+0x6c>
+
+    case XMC_CCU4_SLICE_IRQ_ID_EVENT0:
+      mask = ((uint32_t) CCU4_CC4_SRS_E0SR_Msk);
+10001822:	23c0      	movs	r3, #192	; 0xc0
+10001824:	009b      	lsls	r3, r3, #2
+10001826:	613b      	str	r3, [r7, #16]
+      pos  = CCU4_CC4_SRS_E0SR_Pos;
+10001828:	2308      	movs	r3, #8
+1000182a:	617b      	str	r3, [r7, #20]
+      break;
+1000182c:	e010      	b.n	10001850 <XMC_CCU4_SLICE_SetInterruptNode+0x6c>
+
+    case XMC_CCU4_SLICE_IRQ_ID_EVENT1:
+      mask = ((uint32_t) CCU4_CC4_SRS_E1SR_Msk);
+1000182e:	23c0      	movs	r3, #192	; 0xc0
+10001830:	011b      	lsls	r3, r3, #4
+10001832:	613b      	str	r3, [r7, #16]
+      pos  = CCU4_CC4_SRS_E1SR_Pos;
+10001834:	230a      	movs	r3, #10
+10001836:	617b      	str	r3, [r7, #20]
+      break;
+10001838:	e00a      	b.n	10001850 <XMC_CCU4_SLICE_SetInterruptNode+0x6c>
+
+    case XMC_CCU4_SLICE_IRQ_ID_EVENT2:
+    case XMC_CCU4_SLICE_IRQ_ID_TRAP:
+      mask = ((uint32_t) CCU4_CC4_SRS_E2SR_Msk);
+1000183a:	23c0      	movs	r3, #192	; 0xc0
+1000183c:	019b      	lsls	r3, r3, #6
+1000183e:	613b      	str	r3, [r7, #16]
+      pos  = CCU4_CC4_SRS_E2SR_Pos;
+10001840:	230c      	movs	r3, #12
+10001842:	617b      	str	r3, [r7, #20]
+      break;
+10001844:	e004      	b.n	10001850 <XMC_CCU4_SLICE_SetInterruptNode+0x6c>
+	  
+	default:
+	  mask = 0;
+10001846:	2300      	movs	r3, #0
+10001848:	613b      	str	r3, [r7, #16]
+	  pos = 0;
+1000184a:	2300      	movs	r3, #0
+1000184c:	617b      	str	r3, [r7, #20]
+	  break;
+1000184e:	46c0      	nop			; (mov r8, r8)
+  }
+
+  if (mask != 0)
+10001850:	693b      	ldr	r3, [r7, #16]
+10001852:	2b00      	cmp	r3, #0
+10001854:	d014      	beq.n	10001880 <XMC_CCU4_SLICE_SetInterruptNode+0x9c>
+  {
+    srs = slice->SRS;
+10001856:	687b      	ldr	r3, [r7, #4]
+10001858:	22a8      	movs	r2, #168	; 0xa8
+1000185a:	589b      	ldr	r3, [r3, r2]
+1000185c:	60fb      	str	r3, [r7, #12]
+    srs &= ~mask;
+1000185e:	693b      	ldr	r3, [r7, #16]
+10001860:	43da      	mvns	r2, r3
+10001862:	68fb      	ldr	r3, [r7, #12]
+10001864:	4013      	ands	r3, r2
+10001866:	60fb      	str	r3, [r7, #12]
+    srs |= (uint32_t)sr << pos;
+10001868:	1cbb      	adds	r3, r7, #2
+1000186a:	781a      	ldrb	r2, [r3, #0]
+1000186c:	697b      	ldr	r3, [r7, #20]
+1000186e:	409a      	lsls	r2, r3
+10001870:	1c13      	adds	r3, r2, #0
+10001872:	68fa      	ldr	r2, [r7, #12]
+10001874:	4313      	orrs	r3, r2
+10001876:	60fb      	str	r3, [r7, #12]
+    slice->SRS = srs;
+10001878:	687b      	ldr	r3, [r7, #4]
+1000187a:	21a8      	movs	r1, #168	; 0xa8
+1000187c:	68fa      	ldr	r2, [r7, #12]
+1000187e:	505a      	str	r2, [r3, r1]
+  }
+}
+10001880:	46bd      	mov	sp, r7
+10001882:	b006      	add	sp, #24
+10001884:	bd80      	pop	{r7, pc}
+10001886:	46c0      	nop			; (mov r8, r8)
+10001888:	10002118 	.word	0x10002118
+
+1000188c <XMC_GPIO_SetHardwareControl>:
+  port->IOCR[(uint32_t)pin >> 2U] &= ~(uint32_t)((uint32_t)PORT_IOCR_PC_Msk << ((uint32_t)PORT_IOCR_PC_Size * ((uint32_t)pin & 0x3U)));
+  port->IOCR[(uint32_t)pin >> 2U] |= (uint32_t)mode << ((uint32_t)PORT_IOCR_PC_Size * ((uint32_t)pin & 0x3U));
+}
+
+void XMC_GPIO_SetHardwareControl(XMC_GPIO_PORT_t *const port, const uint8_t pin, const XMC_GPIO_HWCTRL_t hwctrl)
+{
+1000188c:	b580      	push	{r7, lr}
+1000188e:	b082      	sub	sp, #8
+10001890:	af00      	add	r7, sp, #0
+10001892:	6078      	str	r0, [r7, #4]
+10001894:	1c08      	adds	r0, r1, #0
+10001896:	1c11      	adds	r1, r2, #0
+10001898:	1cfb      	adds	r3, r7, #3
+1000189a:	1c02      	adds	r2, r0, #0
+1000189c:	701a      	strb	r2, [r3, #0]
+1000189e:	1cbb      	adds	r3, r7, #2
+100018a0:	1c0a      	adds	r2, r1, #0
+100018a2:	701a      	strb	r2, [r3, #0]
+  XMC_ASSERT("XMC_GPIO_SetHardwareControl: Invalid port", XMC_GPIO_CHECK_PORT(port));
+  XMC_ASSERT("XMC_GPIO_SetHardwareControl: Invalid hwctrl", XMC_GPIO_CHECK_HWCTRL(hwctrl));
+
+  port->HWSEL &= ~(uint32_t)((uint32_t)PORT_HWSEL_Msk << ((uint32_t)pin << 1U));
+100018a4:	687b      	ldr	r3, [r7, #4]
+100018a6:	6f5b      	ldr	r3, [r3, #116]	; 0x74
+100018a8:	1cfa      	adds	r2, r7, #3
+100018aa:	7812      	ldrb	r2, [r2, #0]
+100018ac:	0052      	lsls	r2, r2, #1
+100018ae:	1c11      	adds	r1, r2, #0
+100018b0:	2203      	movs	r2, #3
+100018b2:	408a      	lsls	r2, r1
+100018b4:	43d2      	mvns	r2, r2
+100018b6:	401a      	ands	r2, r3
+100018b8:	687b      	ldr	r3, [r7, #4]
+100018ba:	675a      	str	r2, [r3, #116]	; 0x74
+  port->HWSEL |= (uint32_t)hwctrl << ((uint32_t)pin << 1U);
+100018bc:	687b      	ldr	r3, [r7, #4]
+100018be:	6f5a      	ldr	r2, [r3, #116]	; 0x74
+100018c0:	1cbb      	adds	r3, r7, #2
+100018c2:	781b      	ldrb	r3, [r3, #0]
+100018c4:	1cf9      	adds	r1, r7, #3
+100018c6:	7809      	ldrb	r1, [r1, #0]
+100018c8:	0049      	lsls	r1, r1, #1
+100018ca:	408b      	lsls	r3, r1
+100018cc:	431a      	orrs	r2, r3
+100018ce:	687b      	ldr	r3, [r7, #4]
+100018d0:	675a      	str	r2, [r3, #116]	; 0x74
+}
+100018d2:	46bd      	mov	sp, r7
+100018d4:	b002      	add	sp, #8
+100018d6:	bd80      	pop	{r7, pc}
+
+100018d8 <__aeabi_uidiv>:
+/***********************************************************************************************************************
+ * API IMPLEMENTATION - aeabi routines
+ **********************************************************************************************************************/
+/* This function performs unsigned integer division */
+uint32_t __aeabi_uidiv(uint32_t dividend, uint32_t divisor)
+{
+100018d8:	b580      	push	{r7, lr}
+100018da:	b088      	sub	sp, #32
+100018dc:	af00      	add	r7, sp, #0
+100018de:	6078      	str	r0, [r7, #4]
+100018e0:	6039      	str	r1, [r7, #0]
+ */
+__STATIC_FORCEINLINE uint32_t __get_PRIMASK(void)
+{
+  uint32_t result;
+
+  __ASM volatile ("MRS %0, primask" : "=r" (result) );
+100018e2:	f3ef 8310 	mrs	r3, PRIMASK
+100018e6:	617b      	str	r3, [r7, #20]
+  return(result);
+100018e8:	697b      	ldr	r3, [r7, #20]
+ * API IMPLEMENTATION - Utility functions
+ ********************************************************************************************************************/
+__attribute__((always_inline)) __STATIC_INLINE uint32_t critical_section_enter(void)
+{
+  uint32_t status;
+  status = __get_PRIMASK();
+100018ea:	613b      	str	r3, [r7, #16]
+  \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+           Can only be executed in Privileged modes.
+ */
+__STATIC_FORCEINLINE void __disable_irq(void)
+{
+  __ASM volatile ("cpsid i" : : : "memory");
+100018ec:	b672      	cpsid	i
+  __disable_irq ();
+  return status;
+100018ee:	693b      	ldr	r3, [r7, #16]
+/* This function performs unsigned integer division */
+uint32_t __aeabi_uidiv(uint32_t dividend, uint32_t divisor)
+{
+  uint32_t result;
+  uint32_t ics;
+  ics = critical_section_enter();
+100018f0:	61fb      	str	r3, [r7, #28]
+
+  MATH->DIVCON  = XMC_MATH_UNSIGNED_DIVISION;
+100018f2:	4b0c      	ldr	r3, [pc, #48]	; (10001924 <__aeabi_uidiv+0x4c>)
+100018f4:	2204      	movs	r2, #4
+100018f6:	635a      	str	r2, [r3, #52]	; 0x34
+  MATH->DVD     = dividend;
+100018f8:	4b0a      	ldr	r3, [pc, #40]	; (10001924 <__aeabi_uidiv+0x4c>)
+100018fa:	687a      	ldr	r2, [r7, #4]
+100018fc:	621a      	str	r2, [r3, #32]
+  MATH->DVS     = divisor;
+100018fe:	4b09      	ldr	r3, [pc, #36]	; (10001924 <__aeabi_uidiv+0x4c>)
+10001900:	683a      	ldr	r2, [r7, #0]
+10001902:	625a      	str	r2, [r3, #36]	; 0x24
+
+  result = MATH->QUOT;
+10001904:	4b07      	ldr	r3, [pc, #28]	; (10001924 <__aeabi_uidiv+0x4c>)
+10001906:	6a9b      	ldr	r3, [r3, #40]	; 0x28
+10001908:	61bb      	str	r3, [r7, #24]
+1000190a:	69fb      	ldr	r3, [r7, #28]
+1000190c:	60fb      	str	r3, [r7, #12]
+1000190e:	68fb      	ldr	r3, [r7, #12]
+10001910:	60bb      	str	r3, [r7, #8]
+  \details Assigns the given value to the Priority Mask Register.
+  \param [in]    priMask  Priority Mask
+ */
+__STATIC_FORCEINLINE void __set_PRIMASK(uint32_t priMask)
+{
+  __ASM volatile ("MSR primask, %0" : : "r" (priMask) : "memory");
+10001912:	68bb      	ldr	r3, [r7, #8]
+10001914:	f383 8810 	msr	PRIMASK, r3
+
+  critical_section_exit(ics);
+
+  return result;
+10001918:	69bb      	ldr	r3, [r7, #24]
+}
+1000191a:	1c18      	adds	r0, r3, #0
+1000191c:	46bd      	mov	sp, r7
+1000191e:	b008      	add	sp, #32
+10001920:	bd80      	pop	{r7, pc}
+10001922:	46c0      	nop			; (mov r8, r8)
+10001924:	40030000 	.word	0x40030000
+
+10001928 <_init>:
+  }
+}
+
+/* Init */
+void _init(void)
+{}
+10001928:	b580      	push	{r7, lr}
+1000192a:	af00      	add	r7, sp, #0
+1000192c:	46bd      	mov	sp, r7
+1000192e:	bd80      	pop	{r7, pc}
+
+10001930 <XMC_CCU4_EnableClock>:
+ *
+ * \par<b>Related APIs:</b><br>
+ * XMC_CCU4_DisableClock()<BR> XMC_CCU4_EnableMultipleClocks()<BR> XMC_CCU4_StartPrescaler()<BR> XMC_CCU4_StopPrescaler().
+ */
+__STATIC_INLINE void XMC_CCU4_EnableClock(XMC_CCU4_MODULE_t *const module, const uint8_t slice_number)
+{
+10001930:	b580      	push	{r7, lr}
+10001932:	b082      	sub	sp, #8
+10001934:	af00      	add	r7, sp, #0
+10001936:	6078      	str	r0, [r7, #4]
+10001938:	1c0a      	adds	r2, r1, #0
+1000193a:	1cfb      	adds	r3, r7, #3
+1000193c:	701a      	strb	r2, [r3, #0]
+  XMC_ASSERT("XMC_CCU4_EnableClock:Invalid Module Pointer", XMC_CCU4_IsValidModule(module));
+  XMC_ASSERT("XMC_CCU4_EnableClock:Invalid Slice Number", (slice_number < 4U));
+
+  module->GIDLC = ((uint32_t) 1) << slice_number;
+1000193e:	1cfb      	adds	r3, r7, #3
+10001940:	781b      	ldrb	r3, [r3, #0]
+10001942:	2201      	movs	r2, #1
+10001944:	409a      	lsls	r2, r3
+10001946:	687b      	ldr	r3, [r7, #4]
+10001948:	60da      	str	r2, [r3, #12]
+}
+1000194a:	46bd      	mov	sp, r7
+1000194c:	b002      	add	sp, #8
+1000194e:	bd80      	pop	{r7, pc}
+
+10001950 <XMC_CCU4_SLICE_StartTimer>:
+ *
+ * \par<b>Related APIs:</b><br>
+ *  XMC_CCU4_SLICE_StopTimer().
+ */
+__STATIC_INLINE void XMC_CCU4_SLICE_StartTimer(XMC_CCU4_SLICE_t *const slice)
+{
+10001950:	b580      	push	{r7, lr}
+10001952:	b082      	sub	sp, #8
+10001954:	af00      	add	r7, sp, #0
+10001956:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("XMC_CCU4_SLICE_StartTimer:Invalid Slice Pointer", XMC_CCU4_IsValidSlice(slice));
+  slice->TCSET = CCU4_CC4_TCSET_TRBS_Msk;
+10001958:	687b      	ldr	r3, [r7, #4]
+1000195a:	2201      	movs	r2, #1
+1000195c:	60da      	str	r2, [r3, #12]
+}
+1000195e:	46bd      	mov	sp, r7
+10001960:	b002      	add	sp, #8
+10001962:	bd80      	pop	{r7, pc}
+
+10001964 <XMC_CCU4_SLICE_ClearTimer>:
+ *
+ * \par<b>Related APIs:</b><br>
+ *  XMC_CCU4_SLICE_StartTimer().
+ */
+__STATIC_INLINE void XMC_CCU4_SLICE_ClearTimer(XMC_CCU4_SLICE_t *const slice)
+{
+10001964:	b580      	push	{r7, lr}
+10001966:	b082      	sub	sp, #8
+10001968:	af00      	add	r7, sp, #0
+1000196a:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("XMC_CCU4_SLICE_ClearTimer:Invalid Slice Pointer", XMC_CCU4_IsValidSlice(slice));
+  slice->TCCLR = (uint32_t) CCU4_CC4_TCCLR_TCC_Msk;
+1000196c:	687b      	ldr	r3, [r7, #4]
+1000196e:	2202      	movs	r2, #2
+10001970:	611a      	str	r2, [r3, #16]
+}
+10001972:	46bd      	mov	sp, r7
+10001974:	b002      	add	sp, #8
+10001976:	bd80      	pop	{r7, pc}
+
+10001978 <XMC_CCU4_SLICE_SetTimerPeriodMatch>:
+ *
+ * \par<b>Related APIs:</b><br>
+ *  XMC_CCU4_SLICE_GetTimerPeriodMatch().
+ */
+__STATIC_INLINE void XMC_CCU4_SLICE_SetTimerPeriodMatch(XMC_CCU4_SLICE_t *const slice, const uint16_t period_val)
+{
+10001978:	b580      	push	{r7, lr}
+1000197a:	b082      	sub	sp, #8
+1000197c:	af00      	add	r7, sp, #0
+1000197e:	6078      	str	r0, [r7, #4]
+10001980:	1c0a      	adds	r2, r1, #0
+10001982:	1cbb      	adds	r3, r7, #2
+10001984:	801a      	strh	r2, [r3, #0]
+  XMC_ASSERT("XMC_CCU4_SLICE_SetTimerPeriodMatch:Invalid Slice Pointer", XMC_CCU4_IsValidSlice(slice));
+  slice->PRS = (uint32_t) period_val;
+10001986:	1cbb      	adds	r3, r7, #2
+10001988:	881a      	ldrh	r2, [r3, #0]
+1000198a:	687b      	ldr	r3, [r7, #4]
+1000198c:	635a      	str	r2, [r3, #52]	; 0x34
+}
+1000198e:	46bd      	mov	sp, r7
+10001990:	b002      	add	sp, #8
+10001992:	bd80      	pop	{r7, pc}
+
+10001994 <XMC_CCU4_SLICE_SetTimerCompareMatch>:
+ *
+ * \par<b>Related APIs:</b><br>
+ *  XMC_CCU4_SLICE_GetTimerPeriodMatch().
+ */
+__STATIC_INLINE void XMC_CCU4_SLICE_SetTimerCompareMatch(XMC_CCU4_SLICE_t *const slice, const uint16_t compare_val)
+{
+10001994:	b580      	push	{r7, lr}
+10001996:	b082      	sub	sp, #8
+10001998:	af00      	add	r7, sp, #0
+1000199a:	6078      	str	r0, [r7, #4]
+1000199c:	1c0a      	adds	r2, r1, #0
+1000199e:	1cbb      	adds	r3, r7, #2
+100019a0:	801a      	strh	r2, [r3, #0]
+  XMC_ASSERT("XMC_CCU4_SLICE_SetTimerCompareMatch:Invalid Slice Pointer", XMC_CCU4_IsValidSlice(slice));
+  slice->CRS = (uint32_t) compare_val;
+100019a2:	1cbb      	adds	r3, r7, #2
+100019a4:	881a      	ldrh	r2, [r3, #0]
+100019a6:	687b      	ldr	r3, [r7, #4]
+100019a8:	63da      	str	r2, [r3, #60]	; 0x3c
+}
+100019aa:	46bd      	mov	sp, r7
+100019ac:	b002      	add	sp, #8
+100019ae:	bd80      	pop	{r7, pc}
+
+100019b0 <XMC_CCU4_EnableShadowTransfer>:
+ *
+ * \par<b>Related APIs:</b><br>
+ *  None.
+ */
+__STATIC_INLINE void XMC_CCU4_EnableShadowTransfer(XMC_CCU4_MODULE_t *const module, const uint32_t shadow_transfer_msk)
+{
+100019b0:	b580      	push	{r7, lr}
+100019b2:	b082      	sub	sp, #8
+100019b4:	af00      	add	r7, sp, #0
+100019b6:	6078      	str	r0, [r7, #4]
+100019b8:	6039      	str	r1, [r7, #0]
+  XMC_ASSERT("XMC_CCU4_EnableShadowTransfer:Invalid Slice Pointer", XMC_CCU4_IsValidModule(module));
+  module->GCSS = (uint32_t)shadow_transfer_msk;
+100019ba:	687b      	ldr	r3, [r7, #4]
+100019bc:	683a      	ldr	r2, [r7, #0]
+100019be:	611a      	str	r2, [r3, #16]
+}
+100019c0:	46bd      	mov	sp, r7
+100019c2:	b002      	add	sp, #8
+100019c4:	bd80      	pop	{r7, pc}
+100019c6:	46c0      	nop			; (mov r8, r8)
+
+100019c8 <XMC_CCU4_SLICE_EnableEvent>:
+ *  XMC_CCU4_SLICE_SetInterruptNode()<BR> XMC_CCU4_SLICE_EnableMultipleEvents()<BR> XMC_CCU4_SLICE_DisableEvent()<BR>
+ *  XMC_CCU4_SLICE_DisableMultipleEvents().
+ */
+__STATIC_INLINE void XMC_CCU4_SLICE_EnableEvent(XMC_CCU4_SLICE_t *const slice,
+    const XMC_CCU4_SLICE_IRQ_ID_t event)
+{
+100019c8:	b580      	push	{r7, lr}
+100019ca:	b082      	sub	sp, #8
+100019cc:	af00      	add	r7, sp, #0
+100019ce:	6078      	str	r0, [r7, #4]
+100019d0:	1c0a      	adds	r2, r1, #0
+100019d2:	1cfb      	adds	r3, r7, #3
+100019d4:	701a      	strb	r2, [r3, #0]
+  XMC_ASSERT("XMC_CCU4_SLICE_EnableEvent:Invalid Slice Pointer", XMC_CCU4_IsValidSlice(slice));
+  XMC_ASSERT("XMC_CCU4_SLICE_EnableEvent:Invalid SR event", XMC_CCU4_SLICE_CHECK_INTERRUPT(event));
+  slice->INTE |= ((uint32_t) 1) << ((uint32_t) event);
+100019d6:	687b      	ldr	r3, [r7, #4]
+100019d8:	22a4      	movs	r2, #164	; 0xa4
+100019da:	589a      	ldr	r2, [r3, r2]
+100019dc:	1cfb      	adds	r3, r7, #3
+100019de:	781b      	ldrb	r3, [r3, #0]
+100019e0:	2101      	movs	r1, #1
+100019e2:	4099      	lsls	r1, r3
+100019e4:	1c0b      	adds	r3, r1, #0
+100019e6:	431a      	orrs	r2, r3
+100019e8:	687b      	ldr	r3, [r7, #4]
+100019ea:	21a4      	movs	r1, #164	; 0xa4
+100019ec:	505a      	str	r2, [r3, r1]
+}
+100019ee:	46bd      	mov	sp, r7
+100019f0:	b002      	add	sp, #8
+100019f2:	bd80      	pop	{r7, pc}
+
+100019f4 <TIMER_Init>:
+/*
+ * This function initializes a TIMER APP based on user configuration.
+ *
+ */
+TIMER_STATUS_t TIMER_Init(TIMER_t* const handle_ptr)
+{
+100019f4:	b590      	push	{r4, r7, lr}
+100019f6:	b085      	sub	sp, #20
+100019f8:	af00      	add	r7, sp, #0
+100019fa:	6078      	str	r0, [r7, #4]
+  TIMER_STATUS_t status;
+
+  XMC_ASSERT("TIMER_Init:handle_ptr NULL" , (handle_ptr != NULL));
+
+  status = TIMER_STATUS_SUCCESS;
+100019fc:	230f      	movs	r3, #15
+100019fe:	18fb      	adds	r3, r7, r3
+10001a00:	2200      	movs	r2, #0
+10001a02:	701a      	strb	r2, [r3, #0]
+  /* Check for APP instance is initialized or not */
+  if (false == handle_ptr->initialized)
+10001a04:	687b      	ldr	r3, [r7, #4]
+10001a06:	2226      	movs	r2, #38	; 0x26
+10001a08:	5c9b      	ldrb	r3, [r3, r2]
+10001a0a:	2201      	movs	r2, #1
+10001a0c:	4053      	eors	r3, r2
+10001a0e:	b2db      	uxtb	r3, r3
+10001a10:	2b00      	cmp	r3, #0
+10001a12:	d00c      	beq.n	10001a2e <TIMER_Init+0x3a>
+  {
+#ifdef TIMER_CCU4_USED
+    if (TIMER_MODULE_CCU4 == handle_ptr->timer_module)
+10001a14:	687b      	ldr	r3, [r7, #4]
+10001a16:	2221      	movs	r2, #33	; 0x21
+10001a18:	5c9b      	ldrb	r3, [r3, r2]
+10001a1a:	2b00      	cmp	r3, #0
+10001a1c:	d107      	bne.n	10001a2e <TIMER_Init+0x3a>
+    {
+      /* Configure CCU4 timer for the required time tick settings */
+      status = TIMER_CCU4_lInit(handle_ptr);
+10001a1e:	230f      	movs	r3, #15
+10001a20:	18fc      	adds	r4, r7, r3
+10001a22:	687b      	ldr	r3, [r7, #4]
+10001a24:	1c18      	adds	r0, r3, #0
+10001a26:	f000 f809 	bl	10001a3c <TIMER_CCU4_lInit>
+10001a2a:	1c03      	adds	r3, r0, #0
+10001a2c:	7023      	strb	r3, [r4, #0]
+      status = TIMER_CCU8_lInit(handle_ptr);
+    }
+#endif
+  }
+
+  return (status);
+10001a2e:	230f      	movs	r3, #15
+10001a30:	18fb      	adds	r3, r7, r3
+10001a32:	781b      	ldrb	r3, [r3, #0]
+}
+10001a34:	1c18      	adds	r0, r3, #0
+10001a36:	46bd      	mov	sp, r7
+10001a38:	b005      	add	sp, #20
+10001a3a:	bd90      	pop	{r4, r7, pc}
+
+10001a3c <TIMER_CCU4_lInit>:
+#ifdef TIMER_CCU4_USED
+/*
+ * This function configures timer ccu4 timer with required time tick value
+ */
+TIMER_STATUS_t TIMER_CCU4_lInit(TIMER_t* const handle_ptr)
+{
+10001a3c:	b590      	push	{r4, r7, lr}
+10001a3e:	b085      	sub	sp, #20
+10001a40:	af00      	add	r7, sp, #0
+10001a42:	6078      	str	r0, [r7, #4]
+  TIMER_STATUS_t status;
+  /* Initialize the global registers */
+  status = (TIMER_STATUS_t)GLOBAL_CCU4_Init(handle_ptr->global_ccu4_handler);
+10001a44:	687b      	ldr	r3, [r7, #4]
+10001a46:	691b      	ldr	r3, [r3, #16]
+10001a48:	220f      	movs	r2, #15
+10001a4a:	18bc      	adds	r4, r7, r2
+10001a4c:	1c18      	adds	r0, r3, #0
+10001a4e:	f000 f92f 	bl	10001cb0 <GLOBAL_CCU4_Init>
+10001a52:	1c03      	adds	r3, r0, #0
+10001a54:	7023      	strb	r3, [r4, #0]
+
+  /* Enable the clock for selected timer */
+  XMC_CCU4_EnableClock(handle_ptr->global_ccu4_handler->module_ptr, handle_ptr->ccu4_slice_number);
+10001a56:	687b      	ldr	r3, [r7, #4]
+10001a58:	691b      	ldr	r3, [r3, #16]
+10001a5a:	689a      	ldr	r2, [r3, #8]
+10001a5c:	687b      	ldr	r3, [r7, #4]
+10001a5e:	7e1b      	ldrb	r3, [r3, #24]
+10001a60:	1c10      	adds	r0, r2, #0
+10001a62:	1c19      	adds	r1, r3, #0
+10001a64:	f7ff ff64 	bl	10001930 <XMC_CCU4_EnableClock>
+  /* Configure the timer with required settings */
+  XMC_CCU4_SLICE_CompareInit(handle_ptr->ccu4_slice_ptr, handle_ptr->ccu4_slice_config_ptr);
+10001a68:	687b      	ldr	r3, [r7, #4]
+10001a6a:	695a      	ldr	r2, [r3, #20]
+10001a6c:	687b      	ldr	r3, [r7, #4]
+10001a6e:	69db      	ldr	r3, [r3, #28]
+10001a70:	1c10      	adds	r0, r2, #0
+10001a72:	1c19      	adds	r1, r3, #0
+10001a74:	f7ff fe82 	bl	1000177c <XMC_CCU4_SLICE_CompareInit>
+  /* programs the timer period and compare register according to time interval value and do the shadow transfer */
+  TIMER_CCU4_lShadowTransfer(handle_ptr);
+10001a78:	687b      	ldr	r3, [r7, #4]
+10001a7a:	1c18      	adds	r0, r3, #0
+10001a7c:	f000 f830 	bl	10001ae0 <TIMER_CCU4_lShadowTransfer>
+
+#ifdef  TIMER_INTERRUPT
+  if (true == handle_ptr->period_match_enable)
+10001a80:	687b      	ldr	r3, [r7, #4]
+10001a82:	2225      	movs	r2, #37	; 0x25
+10001a84:	5c9b      	ldrb	r3, [r3, r2]
+10001a86:	2b00      	cmp	r3, #0
+10001a88:	d00f      	beq.n	10001aaa <TIMER_CCU4_lInit+0x6e>
+  {
+    /* Binds a period match event to an NVIC node  */
+    XMC_CCU4_SLICE_SetInterruptNode(handle_ptr->ccu4_slice_ptr, XMC_CCU4_SLICE_IRQ_ID_PERIOD_MATCH,
+10001a8a:	687b      	ldr	r3, [r7, #4]
+10001a8c:	6959      	ldr	r1, [r3, #20]
+10001a8e:	687b      	ldr	r3, [r7, #4]
+10001a90:	2220      	movs	r2, #32
+10001a92:	5c9b      	ldrb	r3, [r3, r2]
+10001a94:	1c08      	adds	r0, r1, #0
+10001a96:	2100      	movs	r1, #0
+10001a98:	1c1a      	adds	r2, r3, #0
+10001a9a:	f7ff fea3 	bl	100017e4 <XMC_CCU4_SLICE_SetInterruptNode>
+                                    handle_ptr->ccu4_period_match_node);
+    /* Enables a timer(period match) event  */
+    XMC_CCU4_SLICE_EnableEvent(handle_ptr->ccu4_slice_ptr, XMC_CCU4_SLICE_IRQ_ID_PERIOD_MATCH);
+10001a9e:	687b      	ldr	r3, [r7, #4]
+10001aa0:	695b      	ldr	r3, [r3, #20]
+10001aa2:	1c18      	adds	r0, r3, #0
+10001aa4:	2100      	movs	r1, #0
+10001aa6:	f7ff ff8f 	bl	100019c8 <XMC_CCU4_SLICE_EnableEvent>
+  }
+#endif
+  /* Clears the timer register */
+  XMC_CCU4_SLICE_ClearTimer(handle_ptr->ccu4_slice_ptr);
+10001aaa:	687b      	ldr	r3, [r7, #4]
+10001aac:	695b      	ldr	r3, [r3, #20]
+10001aae:	1c18      	adds	r0, r3, #0
+10001ab0:	f7ff ff58 	bl	10001964 <XMC_CCU4_SLICE_ClearTimer>
+
+  /* update the initialization flag as true for particular instance*/
+  handle_ptr->initialized = true;
+10001ab4:	687b      	ldr	r3, [r7, #4]
+10001ab6:	2226      	movs	r2, #38	; 0x26
+10001ab8:	2101      	movs	r1, #1
+10001aba:	5499      	strb	r1, [r3, r2]
+
+  /* Check whether the start of the timer is enabled during initialization or not */
+  if (handle_ptr->start_control == true)
+10001abc:	687b      	ldr	r3, [r7, #4]
+10001abe:	2224      	movs	r2, #36	; 0x24
+10001ac0:	5c9b      	ldrb	r3, [r3, r2]
+10001ac2:	2b00      	cmp	r3, #0
+10001ac4:	d004      	beq.n	10001ad0 <TIMER_CCU4_lInit+0x94>
+  {
+    /* Start the timer */
+    XMC_CCU4_SLICE_StartTimer(handle_ptr->ccu4_slice_ptr);
+10001ac6:	687b      	ldr	r3, [r7, #4]
+10001ac8:	695b      	ldr	r3, [r3, #20]
+10001aca:	1c18      	adds	r0, r3, #0
+10001acc:	f7ff ff40 	bl	10001950 <XMC_CCU4_SLICE_StartTimer>
+  }
+
+  return (status);
+10001ad0:	230f      	movs	r3, #15
+10001ad2:	18fb      	adds	r3, r7, r3
+10001ad4:	781b      	ldrb	r3, [r3, #0]
+}
+10001ad6:	1c18      	adds	r0, r3, #0
+10001ad8:	46bd      	mov	sp, r7
+10001ada:	b005      	add	sp, #20
+10001adc:	bd90      	pop	{r4, r7, pc}
+10001ade:	46c0      	nop			; (mov r8, r8)
+
+10001ae0 <TIMER_CCU4_lShadowTransfer>:
+
+/*
+ * This function configures timer period and compare values and triggers the shadow transfer operation
+ */
+void TIMER_CCU4_lShadowTransfer(TIMER_t* const handle_ptr)
+{
+10001ae0:	b580      	push	{r7, lr}
+10001ae2:	b082      	sub	sp, #8
+10001ae4:	af00      	add	r7, sp, #0
+10001ae6:	6078      	str	r0, [r7, #4]
+  /* programs the timer period register according to time interval value */
+  XMC_CCU4_SLICE_SetTimerPeriodMatch(handle_ptr->ccu4_slice_ptr, handle_ptr->period_value);
+10001ae8:	687b      	ldr	r3, [r7, #4]
+10001aea:	695a      	ldr	r2, [r3, #20]
+10001aec:	687b      	ldr	r3, [r7, #4]
+10001aee:	8c5b      	ldrh	r3, [r3, #34]	; 0x22
+10001af0:	1c10      	adds	r0, r2, #0
+10001af2:	1c19      	adds	r1, r3, #0
+10001af4:	f7ff ff40 	bl	10001978 <XMC_CCU4_SLICE_SetTimerPeriodMatch>
+  /* programs the timer compare register for 50% duty cycle */
+  XMC_CCU4_SLICE_SetTimerCompareMatch(handle_ptr->ccu4_slice_ptr, TIMER_CMP_100_DUTY);
+10001af8:	687b      	ldr	r3, [r7, #4]
+10001afa:	695b      	ldr	r3, [r3, #20]
+10001afc:	1c18      	adds	r0, r3, #0
+10001afe:	2100      	movs	r1, #0
+10001b00:	f7ff ff48 	bl	10001994 <XMC_CCU4_SLICE_SetTimerCompareMatch>
+  /* Transfers value from shadow timer registers to actual timer registers */
+  XMC_CCU4_EnableShadowTransfer(handle_ptr->global_ccu4_handler->module_ptr, handle_ptr->shadow_mask);
+10001b04:	687b      	ldr	r3, [r7, #4]
+10001b06:	691b      	ldr	r3, [r3, #16]
+10001b08:	689a      	ldr	r2, [r3, #8]
+10001b0a:	687b      	ldr	r3, [r7, #4]
+10001b0c:	68db      	ldr	r3, [r3, #12]
+10001b0e:	1c10      	adds	r0, r2, #0
+10001b10:	1c19      	adds	r1, r3, #0
+10001b12:	f7ff ff4d 	bl	100019b0 <XMC_CCU4_EnableShadowTransfer>
+}
+10001b16:	46bd      	mov	sp, r7
+10001b18:	b002      	add	sp, #8
+10001b1a:	bd80      	pop	{r7, pc}
+
+10001b1c <__NVIC_EnableIRQ>:
+  \details Enables a device specific interrupt in the NVIC interrupt controller.
+  \param [in]      IRQn  Device specific interrupt number.
+  \note    IRQn must not be negative.
+ */
+__STATIC_INLINE void __NVIC_EnableIRQ(IRQn_Type IRQn)
+{
+10001b1c:	b580      	push	{r7, lr}
+10001b1e:	b082      	sub	sp, #8
+10001b20:	af00      	add	r7, sp, #0
+10001b22:	1c02      	adds	r2, r0, #0
+10001b24:	1dfb      	adds	r3, r7, #7
+10001b26:	701a      	strb	r2, [r3, #0]
+  if ((int32_t)(IRQn) >= 0)
+10001b28:	1dfb      	adds	r3, r7, #7
+10001b2a:	781b      	ldrb	r3, [r3, #0]
+10001b2c:	2b7f      	cmp	r3, #127	; 0x7f
+10001b2e:	d809      	bhi.n	10001b44 <__NVIC_EnableIRQ+0x28>
+  {
+    __COMPILER_BARRIER();
+    NVIC->ISER[0U] = (uint32_t)(1UL << (((uint32_t)IRQn) & 0x1FUL));
+10001b30:	4b06      	ldr	r3, [pc, #24]	; (10001b4c <__NVIC_EnableIRQ+0x30>)
+10001b32:	1dfa      	adds	r2, r7, #7
+10001b34:	7812      	ldrb	r2, [r2, #0]
+10001b36:	1c11      	adds	r1, r2, #0
+10001b38:	221f      	movs	r2, #31
+10001b3a:	400a      	ands	r2, r1
+10001b3c:	2101      	movs	r1, #1
+10001b3e:	4091      	lsls	r1, r2
+10001b40:	1c0a      	adds	r2, r1, #0
+10001b42:	601a      	str	r2, [r3, #0]
+    __COMPILER_BARRIER();
+  }
+}
+10001b44:	46bd      	mov	sp, r7
+10001b46:	b002      	add	sp, #8
+10001b48:	bd80      	pop	{r7, pc}
+10001b4a:	46c0      	nop			; (mov r8, r8)
+10001b4c:	e000e100 	.word	0xe000e100
+
+10001b50 <__NVIC_SetPriority>:
+  \param [in]      IRQn  Interrupt number.
+  \param [in]  priority  Priority to set.
+  \note    The priority cannot be set for every processor exception.
+ */
+__STATIC_INLINE void __NVIC_SetPriority(IRQn_Type IRQn, uint32_t priority)
+{
+10001b50:	b5b0      	push	{r4, r5, r7, lr}
+10001b52:	b082      	sub	sp, #8
+10001b54:	af00      	add	r7, sp, #0
+10001b56:	1c02      	adds	r2, r0, #0
+10001b58:	6039      	str	r1, [r7, #0]
+10001b5a:	1dfb      	adds	r3, r7, #7
+10001b5c:	701a      	strb	r2, [r3, #0]
+  if ((int32_t)(IRQn) >= 0)
+10001b5e:	1dfb      	adds	r3, r7, #7
+10001b60:	781b      	ldrb	r3, [r3, #0]
+10001b62:	2b7f      	cmp	r3, #127	; 0x7f
+10001b64:	d827      	bhi.n	10001bb6 <__NVIC_SetPriority+0x66>
+  {
+    NVIC->IP[_IP_IDX(IRQn)]  = ((uint32_t)(NVIC->IP[_IP_IDX(IRQn)]  & ~(0xFFUL << _BIT_SHIFT(IRQn))) |
+10001b66:	4c2d      	ldr	r4, [pc, #180]	; (10001c1c <__NVIC_SetPriority+0xcc>)
+10001b68:	1dfb      	adds	r3, r7, #7
+10001b6a:	781b      	ldrb	r3, [r3, #0]
+10001b6c:	b25b      	sxtb	r3, r3
+10001b6e:	089b      	lsrs	r3, r3, #2
+10001b70:	492a      	ldr	r1, [pc, #168]	; (10001c1c <__NVIC_SetPriority+0xcc>)
+10001b72:	1dfa      	adds	r2, r7, #7
+10001b74:	7812      	ldrb	r2, [r2, #0]
+10001b76:	b252      	sxtb	r2, r2
+10001b78:	0892      	lsrs	r2, r2, #2
+10001b7a:	32c0      	adds	r2, #192	; 0xc0
+10001b7c:	0092      	lsls	r2, r2, #2
+10001b7e:	5852      	ldr	r2, [r2, r1]
+10001b80:	1df9      	adds	r1, r7, #7
+10001b82:	7809      	ldrb	r1, [r1, #0]
+10001b84:	1c08      	adds	r0, r1, #0
+10001b86:	2103      	movs	r1, #3
+10001b88:	4001      	ands	r1, r0
+10001b8a:	00c9      	lsls	r1, r1, #3
+10001b8c:	1c08      	adds	r0, r1, #0
+10001b8e:	21ff      	movs	r1, #255	; 0xff
+10001b90:	4081      	lsls	r1, r0
+10001b92:	43c9      	mvns	r1, r1
+10001b94:	4011      	ands	r1, r2
+       (((priority << (8U - __NVIC_PRIO_BITS)) & (uint32_t)0xFFUL) << _BIT_SHIFT(IRQn)));
+10001b96:	683a      	ldr	r2, [r7, #0]
+10001b98:	0192      	lsls	r2, r2, #6
+10001b9a:	20ff      	movs	r0, #255	; 0xff
+10001b9c:	4002      	ands	r2, r0
+10001b9e:	1df8      	adds	r0, r7, #7
+10001ba0:	7800      	ldrb	r0, [r0, #0]
+10001ba2:	1c05      	adds	r5, r0, #0
+10001ba4:	2003      	movs	r0, #3
+10001ba6:	4028      	ands	r0, r5
+10001ba8:	00c0      	lsls	r0, r0, #3
+10001baa:	4082      	lsls	r2, r0
+ */
+__STATIC_INLINE void __NVIC_SetPriority(IRQn_Type IRQn, uint32_t priority)
+{
+  if ((int32_t)(IRQn) >= 0)
+  {
+    NVIC->IP[_IP_IDX(IRQn)]  = ((uint32_t)(NVIC->IP[_IP_IDX(IRQn)]  & ~(0xFFUL << _BIT_SHIFT(IRQn))) |
+10001bac:	430a      	orrs	r2, r1
+10001bae:	33c0      	adds	r3, #192	; 0xc0
+10001bb0:	009b      	lsls	r3, r3, #2
+10001bb2:	511a      	str	r2, [r3, r4]
+10001bb4:	e02e      	b.n	10001c14 <__NVIC_SetPriority+0xc4>
+       (((priority << (8U - __NVIC_PRIO_BITS)) & (uint32_t)0xFFUL) << _BIT_SHIFT(IRQn)));
+  }
+  else
+  {
+    SCB->SHP[_SHP_IDX(IRQn)] = ((uint32_t)(SCB->SHP[_SHP_IDX(IRQn)] & ~(0xFFUL << _BIT_SHIFT(IRQn))) |
+10001bb6:	4c1a      	ldr	r4, [pc, #104]	; (10001c20 <__NVIC_SetPriority+0xd0>)
+10001bb8:	1dfb      	adds	r3, r7, #7
+10001bba:	781b      	ldrb	r3, [r3, #0]
+10001bbc:	1c1a      	adds	r2, r3, #0
+10001bbe:	230f      	movs	r3, #15
+10001bc0:	4013      	ands	r3, r2
+10001bc2:	3b08      	subs	r3, #8
+10001bc4:	0899      	lsrs	r1, r3, #2
+10001bc6:	4a16      	ldr	r2, [pc, #88]	; (10001c20 <__NVIC_SetPriority+0xd0>)
+10001bc8:	1dfb      	adds	r3, r7, #7
+10001bca:	781b      	ldrb	r3, [r3, #0]
+10001bcc:	1c18      	adds	r0, r3, #0
+10001bce:	230f      	movs	r3, #15
+10001bd0:	4003      	ands	r3, r0
+10001bd2:	3b08      	subs	r3, #8
+10001bd4:	089b      	lsrs	r3, r3, #2
+10001bd6:	3306      	adds	r3, #6
+10001bd8:	009b      	lsls	r3, r3, #2
+10001bda:	18d3      	adds	r3, r2, r3
+10001bdc:	685b      	ldr	r3, [r3, #4]
+10001bde:	1dfa      	adds	r2, r7, #7
+10001be0:	7812      	ldrb	r2, [r2, #0]
+10001be2:	1c10      	adds	r0, r2, #0
+10001be4:	2203      	movs	r2, #3
+10001be6:	4002      	ands	r2, r0
+10001be8:	00d2      	lsls	r2, r2, #3
+10001bea:	1c10      	adds	r0, r2, #0
+10001bec:	22ff      	movs	r2, #255	; 0xff
+10001bee:	4082      	lsls	r2, r0
+10001bf0:	43d2      	mvns	r2, r2
+10001bf2:	401a      	ands	r2, r3
+       (((priority << (8U - __NVIC_PRIO_BITS)) & (uint32_t)0xFFUL) << _BIT_SHIFT(IRQn)));
+10001bf4:	683b      	ldr	r3, [r7, #0]
+10001bf6:	019b      	lsls	r3, r3, #6
+10001bf8:	20ff      	movs	r0, #255	; 0xff
+10001bfa:	4003      	ands	r3, r0
+10001bfc:	1df8      	adds	r0, r7, #7
+10001bfe:	7800      	ldrb	r0, [r0, #0]
+10001c00:	1c05      	adds	r5, r0, #0
+10001c02:	2003      	movs	r0, #3
+10001c04:	4028      	ands	r0, r5
+10001c06:	00c0      	lsls	r0, r0, #3
+10001c08:	4083      	lsls	r3, r0
+    NVIC->IP[_IP_IDX(IRQn)]  = ((uint32_t)(NVIC->IP[_IP_IDX(IRQn)]  & ~(0xFFUL << _BIT_SHIFT(IRQn))) |
+       (((priority << (8U - __NVIC_PRIO_BITS)) & (uint32_t)0xFFUL) << _BIT_SHIFT(IRQn)));
+  }
+  else
+  {
+    SCB->SHP[_SHP_IDX(IRQn)] = ((uint32_t)(SCB->SHP[_SHP_IDX(IRQn)] & ~(0xFFUL << _BIT_SHIFT(IRQn))) |
+10001c0a:	431a      	orrs	r2, r3
+10001c0c:	1d8b      	adds	r3, r1, #6
+10001c0e:	009b      	lsls	r3, r3, #2
+10001c10:	18e3      	adds	r3, r4, r3
+10001c12:	605a      	str	r2, [r3, #4]
+       (((priority << (8U - __NVIC_PRIO_BITS)) & (uint32_t)0xFFUL) << _BIT_SHIFT(IRQn)));
+  }
+}
+10001c14:	46bd      	mov	sp, r7
+10001c16:	b002      	add	sp, #8
+10001c18:	bdb0      	pop	{r4, r5, r7, pc}
+10001c1a:	46c0      	nop			; (mov r8, r8)
+10001c1c:	e000e100 	.word	0xe000e100
+10001c20:	e000ed00 	.word	0xe000ed00
+
+10001c24 <INTERRUPT_Enable>:
+ *    return 0;
+ *  }
+ * @endcode<BR> </p>
+ */
+__STATIC_INLINE void INTERRUPT_Enable(const INTERRUPT_t *const handler)
+{
+10001c24:	b580      	push	{r7, lr}
+10001c26:	b082      	sub	sp, #8
+10001c28:	af00      	add	r7, sp, #0
+10001c2a:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("Handler NULL", (handler != NULL));
+  NVIC_EnableIRQ(handler->node);
+10001c2c:	687b      	ldr	r3, [r7, #4]
+10001c2e:	789b      	ldrb	r3, [r3, #2]
+10001c30:	b25b      	sxtb	r3, r3
+10001c32:	1c18      	adds	r0, r3, #0
+10001c34:	f7ff ff72 	bl	10001b1c <__NVIC_EnableIRQ>
+}
+10001c38:	46bd      	mov	sp, r7
+10001c3a:	b002      	add	sp, #8
+10001c3c:	bd80      	pop	{r7, pc}
+10001c3e:	46c0      	nop			; (mov r8, r8)
+
+10001c40 <INTERRUPT_Init>:
+
+/*
+ * API to initialize the INTERRUPT APP
+ */
+INTERRUPT_STATUS_t INTERRUPT_Init(const INTERRUPT_t *const handler)
+{
+10001c40:	b580      	push	{r7, lr}
+10001c42:	b082      	sub	sp, #8
+10001c44:	af00      	add	r7, sp, #0
+10001c46:	6078      	str	r0, [r7, #4]
+    INTERRUPT_Enable(handler);
+  }
+#endif
+
+#if(UC_FAMILY == XMC1)
+  NVIC_SetPriority(handler->node, handler->priority);
+10001c48:	687b      	ldr	r3, [r7, #4]
+10001c4a:	789a      	ldrb	r2, [r3, #2]
+10001c4c:	687b      	ldr	r3, [r7, #4]
+10001c4e:	78db      	ldrb	r3, [r3, #3]
+10001c50:	1c19      	adds	r1, r3, #0
+10001c52:	b253      	sxtb	r3, r2
+10001c54:	1c18      	adds	r0, r3, #0
+10001c56:	f7ff ff7b 	bl	10001b50 <__NVIC_SetPriority>
+  
+#if (UC_SERIES == XMC14)
+  XMC_SCU_SetInterruptControl((uint8_t)handler->node, (XMC_SCU_IRQCTRL_t)((handler->node << 8) | handler->irqctrl));
+10001c5a:	687b      	ldr	r3, [r7, #4]
+10001c5c:	789b      	ldrb	r3, [r3, #2]
+10001c5e:	b2da      	uxtb	r2, r3
+10001c60:	687b      	ldr	r3, [r7, #4]
+10001c62:	789b      	ldrb	r3, [r3, #2]
+10001c64:	b25b      	sxtb	r3, r3
+10001c66:	021b      	lsls	r3, r3, #8
+10001c68:	b299      	uxth	r1, r3
+10001c6a:	687b      	ldr	r3, [r7, #4]
+10001c6c:	881b      	ldrh	r3, [r3, #0]
+10001c6e:	b29b      	uxth	r3, r3
+10001c70:	430b      	orrs	r3, r1
+10001c72:	b29b      	uxth	r3, r3
+10001c74:	b29b      	uxth	r3, r3
+10001c76:	1c10      	adds	r0, r2, #0
+10001c78:	1c19      	adds	r1, r3, #0
+10001c7a:	f7ff fce1 	bl	10001640 <XMC_SCU_SetInterruptControl>
+#endif
+
+  /* Enable the interrupt if enable_at_init is enabled */
+  if (handler->enable_at_init == true)
+10001c7e:	687b      	ldr	r3, [r7, #4]
+10001c80:	791b      	ldrb	r3, [r3, #4]
+10001c82:	2b00      	cmp	r3, #0
+10001c84:	d003      	beq.n	10001c8e <INTERRUPT_Init+0x4e>
+  {
+    INTERRUPT_Enable(handler);
+10001c86:	687b      	ldr	r3, [r7, #4]
+10001c88:	1c18      	adds	r0, r3, #0
+10001c8a:	f7ff ffcb 	bl	10001c24 <INTERRUPT_Enable>
+  }
+#endif
+
+  return (INTERRUPT_STATUS_SUCCESS);
+10001c8e:	2300      	movs	r3, #0
+}
+10001c90:	1c18      	adds	r0, r3, #0
+10001c92:	46bd      	mov	sp, r7
+10001c94:	b002      	add	sp, #8
+10001c96:	bd80      	pop	{r7, pc}
+
+10001c98 <XMC_CCU4_StartPrescaler>:
+ * \par<b>Related APIs:</b><br>
+ * XMC_CCU4_Init()<BR> XMC_CCU4_EnableClock()<BR> XMC_CCU4_DisableClock()<BR> XMC_CCU4_StartPrescaler()<BR>
+ * XMC_CCU4_StopPrescaler().
+ */
+__STATIC_INLINE void XMC_CCU4_StartPrescaler(XMC_CCU4_MODULE_t *const module)
+{
+10001c98:	b580      	push	{r7, lr}
+10001c9a:	b082      	sub	sp, #8
+10001c9c:	af00      	add	r7, sp, #0
+10001c9e:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("XMC_CCU4_StartPrescaler:Invalid Module Pointer", XMC_CCU4_IsValidModule(module));
+  module->GIDLC = (uint32_t) CCU4_GIDLC_SPRB_Msk;
+10001ca0:	687b      	ldr	r3, [r7, #4]
+10001ca2:	2280      	movs	r2, #128	; 0x80
+10001ca4:	0052      	lsls	r2, r2, #1
+10001ca6:	60da      	str	r2, [r3, #12]
+}
+10001ca8:	46bd      	mov	sp, r7
+10001caa:	b002      	add	sp, #8
+10001cac:	bd80      	pop	{r7, pc}
+10001cae:	46c0      	nop			; (mov r8, r8)
+
+10001cb0 <GLOBAL_CCU4_Init>:
+  return version;
+}
+
+/* Initializes the slice with the generated configuration */
+GLOBAL_CCU4_STATUS_t GLOBAL_CCU4_Init(GLOBAL_CCU4_t* handle)
+{
+10001cb0:	b580      	push	{r7, lr}
+10001cb2:	b082      	sub	sp, #8
+10001cb4:	af00      	add	r7, sp, #0
+10001cb6:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("GLOBAL_CCU4_Init:NULL handler", (NULL != handle));
+
+  if (false == handle->is_initialized)
+10001cb8:	687b      	ldr	r3, [r7, #4]
+10001cba:	7b5b      	ldrb	r3, [r3, #13]
+10001cbc:	2201      	movs	r2, #1
+10001cbe:	4053      	eors	r3, r2
+10001cc0:	b2db      	uxtb	r3, r3
+10001cc2:	2b00      	cmp	r3, #0
+10001cc4:	d00f      	beq.n	10001ce6 <GLOBAL_CCU4_Init+0x36>
+  {
+    /* Enable CCU4 module */
+    XMC_CCU4_Init(handle->module_ptr,handle->mcs_action);
+10001cc6:	687b      	ldr	r3, [r7, #4]
+10001cc8:	689a      	ldr	r2, [r3, #8]
+10001cca:	687b      	ldr	r3, [r7, #4]
+10001ccc:	7b1b      	ldrb	r3, [r3, #12]
+10001cce:	1c10      	adds	r0, r2, #0
+10001cd0:	1c19      	adds	r1, r3, #0
+10001cd2:	f7ff fd2f 	bl	10001734 <XMC_CCU4_Init>
+    /* Start the prescaler */
+    XMC_CCU4_StartPrescaler(handle->module_ptr);
+10001cd6:	687b      	ldr	r3, [r7, #4]
+10001cd8:	689b      	ldr	r3, [r3, #8]
+10001cda:	1c18      	adds	r0, r3, #0
+10001cdc:	f7ff ffdc 	bl	10001c98 <XMC_CCU4_StartPrescaler>
+    /* Restricts multiple initializations */
+    handle->is_initialized = true;
+10001ce0:	687b      	ldr	r3, [r7, #4]
+10001ce2:	2201      	movs	r2, #1
+10001ce4:	735a      	strb	r2, [r3, #13]
+  }
+
+  return (GLOBAL_CCU4_STATUS_SUCCESS);
+10001ce6:	2300      	movs	r3, #0
+}
+10001ce8:	1c18      	adds	r0, r3, #0
+10001cea:	46bd      	mov	sp, r7
+10001cec:	b002      	add	sp, #8
+10001cee:	bd80      	pop	{r7, pc}
+
+10001cf0 <DIGITAL_IO_Init>:
+* @param handler Pointer pointing to APP data structure.
+* @return DIGITAL_IO_STATUS_t DIGITAL_IO APP status.
+*/
+
+DIGITAL_IO_STATUS_t DIGITAL_IO_Init(const DIGITAL_IO_t *const handler)
+{
+10001cf0:	b580      	push	{r7, lr}
+10001cf2:	b082      	sub	sp, #8
+10001cf4:	af00      	add	r7, sp, #0
+10001cf6:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("DIGITAL_IO_Init: handler null pointer", handler != NULL);
+
+  /* Initializes input / output characteristics */
+  XMC_GPIO_Init(handler->gpio_port, handler->gpio_pin, &handler->gpio_config);
+10001cf8:	687b      	ldr	r3, [r7, #4]
+10001cfa:	6819      	ldr	r1, [r3, #0]
+10001cfc:	687b      	ldr	r3, [r7, #4]
+10001cfe:	7b1a      	ldrb	r2, [r3, #12]
+10001d00:	687b      	ldr	r3, [r7, #4]
+10001d02:	3304      	adds	r3, #4
+10001d04:	1c08      	adds	r0, r1, #0
+10001d06:	1c11      	adds	r1, r2, #0
+10001d08:	1c1a      	adds	r2, r3, #0
+10001d0a:	f7ff fa3d 	bl	10001188 <XMC_GPIO_Init>
+
+  /*Configure hardware port control*/
+  XMC_GPIO_SetHardwareControl(handler->gpio_port, handler->gpio_pin, handler->hwctrl);
+10001d0e:	687b      	ldr	r3, [r7, #4]
+10001d10:	6819      	ldr	r1, [r3, #0]
+10001d12:	687b      	ldr	r3, [r7, #4]
+10001d14:	7b1a      	ldrb	r2, [r3, #12]
+10001d16:	687b      	ldr	r3, [r7, #4]
+10001d18:	7b5b      	ldrb	r3, [r3, #13]
+10001d1a:	1c08      	adds	r0, r1, #0
+10001d1c:	1c11      	adds	r1, r2, #0
+10001d1e:	1c1a      	adds	r2, r3, #0
+10001d20:	f7ff fdb4 	bl	1000188c <XMC_GPIO_SetHardwareControl>
+
+  return (DIGITAL_IO_STATUS_OK);
+10001d24:	2300      	movs	r3, #0
+}
+10001d26:	1c18      	adds	r0, r3, #0
+10001d28:	46bd      	mov	sp, r7
+10001d2a:	b002      	add	sp, #8
+10001d2c:	bd80      	pop	{r7, pc}
+10001d2e:	46c0      	nop			; (mov r8, r8)
+
+10001d30 <SystemCoreSetup>:
+{
+  .initialized = false
+};
+ 
+void SystemCoreSetup(void)
+{
+10001d30:	b580      	push	{r7, lr}
+10001d32:	af00      	add	r7, sp, #0
+#if UC_SERIES == XMC14
+  /* Enable Prefetch unit */
+  SCU_GENERAL->PFUCR &= ~SCU_GENERAL_PFUCR_PFUBYP_Msk;
+10001d34:	4b03      	ldr	r3, [pc, #12]	; (10001d44 <SystemCoreSetup+0x14>)
+10001d36:	4a03      	ldr	r2, [pc, #12]	; (10001d44 <SystemCoreSetup+0x14>)
+10001d38:	6e92      	ldr	r2, [r2, #104]	; 0x68
+10001d3a:	2101      	movs	r1, #1
+10001d3c:	438a      	bics	r2, r1
+10001d3e:	669a      	str	r2, [r3, #104]	; 0x68
+#endif
+}
+10001d40:	46bd      	mov	sp, r7
+10001d42:	bd80      	pop	{r7, pc}
+10001d44:	40010000 	.word	0x40010000
+
+10001d48 <CLOCK_XMC1_Init>:
+
+/*
+ * API to initialize the CLOCK_XMC1 APP Interrupts
+ */
+CLOCK_XMC1_STATUS_t CLOCK_XMC1_Init(CLOCK_XMC1_t *handle)
+{
+10001d48:	b580      	push	{r7, lr}
+10001d4a:	b084      	sub	sp, #16
+10001d4c:	af00      	add	r7, sp, #0
+10001d4e:	6078      	str	r0, [r7, #4]
+  CLOCK_XMC1_STATUS_t status = CLOCK_XMC1_STATUS_SUCCESS;
+10001d50:	230f      	movs	r3, #15
+10001d52:	18fb      	adds	r3, r7, r3
+10001d54:	2200      	movs	r2, #0
+10001d56:	701a      	strb	r2, [r3, #0]
+  CLOCK_XMC1_STATUS_t loci_event_status = CLOCK_XMC1_STATUS_SUCCESS;
+10001d58:	230e      	movs	r3, #14
+10001d5a:	18fb      	adds	r3, r7, r3
+10001d5c:	2200      	movs	r2, #0
+10001d5e:	701a      	strb	r2, [r3, #0]
+  CLOCK_XMC1_STATUS_t stdbyclkfail_status = CLOCK_XMC1_STATUS_SUCCESS;
+10001d60:	230d      	movs	r3, #13
+10001d62:	18fb      	adds	r3, r7, r3
+10001d64:	2200      	movs	r2, #0
+10001d66:	701a      	strb	r2, [r3, #0]
+  CLOCK_XMC1_STATUS_t loss_ext_clock_event_status = CLOCK_XMC1_STATUS_SUCCESS;
+10001d68:	230c      	movs	r3, #12
+10001d6a:	18fb      	adds	r3, r7, r3
+10001d6c:	2200      	movs	r2, #0
+10001d6e:	701a      	strb	r2, [r3, #0]
+  CLOCK_XMC1_STATUS_t dco1_out_sync_status = CLOCK_XMC1_STATUS_SUCCESS;
+10001d70:	230b      	movs	r3, #11
+10001d72:	18fb      	adds	r3, r7, r3
+10001d74:	2200      	movs	r2, #0
+10001d76:	701a      	strb	r2, [r3, #0]
+
+  XMC_ASSERT("CLOCK_XMC1_Init: CLOCK_XMC1 APP handle pointer uninitialized", (handle != NULL));
+
+  if (handle->init_status == false)
+10001d78:	687b      	ldr	r3, [r7, #4]
+10001d7a:	781b      	ldrb	r3, [r3, #0]
+10001d7c:	2201      	movs	r2, #1
+10001d7e:	4053      	eors	r3, r2
+10001d80:	b2db      	uxtb	r3, r3
+10001d82:	2b00      	cmp	r3, #0
+10001d84:	d01b      	beq.n	10001dbe <CLOCK_XMC1_Init+0x76>
+
+#endif
+    }
+
+#endif
+    status = (CLOCK_XMC1_STATUS_t)(((uint32_t)loci_event_status) | ((uint32_t)stdbyclkfail_status) |
+10001d86:	230e      	movs	r3, #14
+10001d88:	18fa      	adds	r2, r7, r3
+10001d8a:	230d      	movs	r3, #13
+10001d8c:	18fb      	adds	r3, r7, r3
+10001d8e:	7812      	ldrb	r2, [r2, #0]
+10001d90:	781b      	ldrb	r3, [r3, #0]
+10001d92:	4313      	orrs	r3, r2
+10001d94:	b2da      	uxtb	r2, r3
+10001d96:	230c      	movs	r3, #12
+10001d98:	18fb      	adds	r3, r7, r3
+10001d9a:	781b      	ldrb	r3, [r3, #0]
+10001d9c:	4313      	orrs	r3, r2
+10001d9e:	b2d9      	uxtb	r1, r3
+10001da0:	230f      	movs	r3, #15
+10001da2:	18fb      	adds	r3, r7, r3
+10001da4:	220b      	movs	r2, #11
+10001da6:	18ba      	adds	r2, r7, r2
+10001da8:	7812      	ldrb	r2, [r2, #0]
+10001daa:	430a      	orrs	r2, r1
+10001dac:	701a      	strb	r2, [r3, #0]
+    		                       ((uint32_t)loss_ext_clock_event_status) | ((uint32_t)dco1_out_sync_status));
+    if (CLOCK_XMC1_STATUS_SUCCESS == status)
+10001dae:	230f      	movs	r3, #15
+10001db0:	18fb      	adds	r3, r7, r3
+10001db2:	781b      	ldrb	r3, [r3, #0]
+10001db4:	2b00      	cmp	r3, #0
+10001db6:	d102      	bne.n	10001dbe <CLOCK_XMC1_Init+0x76>
+    {
+      handle->init_status = true;
+10001db8:	687b      	ldr	r3, [r7, #4]
+10001dba:	2201      	movs	r2, #1
+10001dbc:	701a      	strb	r2, [r3, #0]
+    }
+  }
+  return (status);
+10001dbe:	230f      	movs	r3, #15
+10001dc0:	18fb      	adds	r3, r7, r3
+10001dc2:	781b      	ldrb	r3, [r3, #0]
+}
+10001dc4:	1c18      	adds	r0, r3, #0
+10001dc6:	46bd      	mov	sp, r7
+10001dc8:	b004      	add	sp, #16
+10001dca:	bd80      	pop	{r7, pc}
+
+10001dcc <SystemCoreClockSetup>:
+
+/**********************************************************************************************************************
+* API IMPLEMENTATION
+**********************************************************************************************************************/
+void SystemCoreClockSetup(void)
+{
+10001dcc:	b590      	push	{r4, r7, lr}
+10001dce:	b085      	sub	sp, #20
+10001dd0:	af00      	add	r7, sp, #0
+/* LOCAL DATA STRUCTURES */
+const XMC_SCU_CLOCK_CONFIG_t CLOCK_XMC1_0_CONFIG =
+10001dd2:	1c3b      	adds	r3, r7, #0
+10001dd4:	4a05      	ldr	r2, [pc, #20]	; (10001dec <SystemCoreClockSetup+0x20>)
+10001dd6:	ca13      	ldmia	r2!, {r0, r1, r4}
+10001dd8:	c313      	stmia	r3!, {r0, r1, r4}
+10001dda:	6812      	ldr	r2, [r2, #0]
+10001ddc:	601a      	str	r2, [r3, #0]
+  .osclp_mode = XMC_SCU_CLOCK_OSCLP_MODE_DISABLED
+
+};
+
+  /* Configure FDIV, IDIV, PCLKSEL dividers*/
+  XMC_SCU_CLOCK_Init(&CLOCK_XMC1_0_CONFIG);
+10001dde:	1c3b      	adds	r3, r7, #0
+10001de0:	1c18      	adds	r0, r3, #0
+10001de2:	f7ff faa9 	bl	10001338 <XMC_SCU_CLOCK_Init>
+}
+10001de6:	46bd      	mov	sp, r7
+10001de8:	b005      	add	sp, #20
+10001dea:	bd90      	pop	{r4, r7, pc}
+10001dec:	100021d0 	.word	0x100021d0
+
+10001df0 <DAVE_Init>:
+ * @param[in]  None
+ *
+ * @return  DAVE_STATUS_t <BR>
+ ******************************************************************************/
+__WEAK DAVE_STATUS_t DAVE_Init(void)
+{
+10001df0:	b590      	push	{r4, r7, lr}
+10001df2:	b083      	sub	sp, #12
+10001df4:	af00      	add	r7, sp, #0
+  DAVE_STATUS_t init_status;
+  
+  init_status = DAVE_STATUS_SUCCESS;
+10001df6:	1dfb      	adds	r3, r7, #7
+10001df8:	2200      	movs	r2, #0
+10001dfa:	701a      	strb	r2, [r3, #0]
+     /** @Initialization of APPs Init Functions */
+     init_status = (DAVE_STATUS_t)CLOCK_XMC1_Init(&CLOCK_XMC1_0);
+10001dfc:	1dfc      	adds	r4, r7, #7
+10001dfe:	4b3d      	ldr	r3, [pc, #244]	; (10001ef4 <DAVE_Init+0x104>)
+10001e00:	1c18      	adds	r0, r3, #0
+10001e02:	f7ff ffa1 	bl	10001d48 <CLOCK_XMC1_Init>
+10001e06:	1c03      	adds	r3, r0, #0
+10001e08:	7023      	strb	r3, [r4, #0]
+
+  if (init_status == DAVE_STATUS_SUCCESS)
+10001e0a:	1dfb      	adds	r3, r7, #7
+10001e0c:	781b      	ldrb	r3, [r3, #0]
+10001e0e:	2b00      	cmp	r3, #0
+10001e10:	d106      	bne.n	10001e20 <DAVE_Init+0x30>
+  {
+	 /**  Initialization of DIGITAL_IO APP instance DIGITAL_IO_0 */
+	 init_status = (DAVE_STATUS_t)DIGITAL_IO_Init(&DIGITAL_IO_0); 
+10001e12:	1dfc      	adds	r4, r7, #7
+10001e14:	4b38      	ldr	r3, [pc, #224]	; (10001ef8 <DAVE_Init+0x108>)
+10001e16:	1c18      	adds	r0, r3, #0
+10001e18:	f7ff ff6a 	bl	10001cf0 <DIGITAL_IO_Init>
+10001e1c:	1c03      	adds	r3, r0, #0
+10001e1e:	7023      	strb	r3, [r4, #0]
+   } 
+  if (init_status == DAVE_STATUS_SUCCESS)
+10001e20:	1dfb      	adds	r3, r7, #7
+10001e22:	781b      	ldrb	r3, [r3, #0]
+10001e24:	2b00      	cmp	r3, #0
+10001e26:	d106      	bne.n	10001e36 <DAVE_Init+0x46>
+  {
+	 /**  Initialization of DIGITAL_IO APP instance DIGITAL_IO_1 */
+	 init_status = (DAVE_STATUS_t)DIGITAL_IO_Init(&DIGITAL_IO_1); 
+10001e28:	1dfc      	adds	r4, r7, #7
+10001e2a:	4b34      	ldr	r3, [pc, #208]	; (10001efc <DAVE_Init+0x10c>)
+10001e2c:	1c18      	adds	r0, r3, #0
+10001e2e:	f7ff ff5f 	bl	10001cf0 <DIGITAL_IO_Init>
+10001e32:	1c03      	adds	r3, r0, #0
+10001e34:	7023      	strb	r3, [r4, #0]
+   } 
+  if (init_status == DAVE_STATUS_SUCCESS)
+10001e36:	1dfb      	adds	r3, r7, #7
+10001e38:	781b      	ldrb	r3, [r3, #0]
+10001e3a:	2b00      	cmp	r3, #0
+10001e3c:	d106      	bne.n	10001e4c <DAVE_Init+0x5c>
+  {
+	 /**  Initialization of DIGITAL_IO APP instance DIGITAL_IO_2 */
+	 init_status = (DAVE_STATUS_t)DIGITAL_IO_Init(&DIGITAL_IO_2); 
+10001e3e:	1dfc      	adds	r4, r7, #7
+10001e40:	4b2f      	ldr	r3, [pc, #188]	; (10001f00 <DAVE_Init+0x110>)
+10001e42:	1c18      	adds	r0, r3, #0
+10001e44:	f7ff ff54 	bl	10001cf0 <DIGITAL_IO_Init>
+10001e48:	1c03      	adds	r3, r0, #0
+10001e4a:	7023      	strb	r3, [r4, #0]
+   } 
+  if (init_status == DAVE_STATUS_SUCCESS)
+10001e4c:	1dfb      	adds	r3, r7, #7
+10001e4e:	781b      	ldrb	r3, [r3, #0]
+10001e50:	2b00      	cmp	r3, #0
+10001e52:	d106      	bne.n	10001e62 <DAVE_Init+0x72>
+  {
+	 /**  Initialization of DIGITAL_IO APP instance DIGITAL_IO_3 */
+	 init_status = (DAVE_STATUS_t)DIGITAL_IO_Init(&DIGITAL_IO_3); 
+10001e54:	1dfc      	adds	r4, r7, #7
+10001e56:	4b2b      	ldr	r3, [pc, #172]	; (10001f04 <DAVE_Init+0x114>)
+10001e58:	1c18      	adds	r0, r3, #0
+10001e5a:	f7ff ff49 	bl	10001cf0 <DIGITAL_IO_Init>
+10001e5e:	1c03      	adds	r3, r0, #0
+10001e60:	7023      	strb	r3, [r4, #0]
+   } 
+  if (init_status == DAVE_STATUS_SUCCESS)
+10001e62:	1dfb      	adds	r3, r7, #7
+10001e64:	781b      	ldrb	r3, [r3, #0]
+10001e66:	2b00      	cmp	r3, #0
+10001e68:	d106      	bne.n	10001e78 <DAVE_Init+0x88>
+  {
+	 /**  Initialization of DIGITAL_IO APP instance DIGITAL_IO_4 */
+	 init_status = (DAVE_STATUS_t)DIGITAL_IO_Init(&DIGITAL_IO_4); 
+10001e6a:	1dfc      	adds	r4, r7, #7
+10001e6c:	4b26      	ldr	r3, [pc, #152]	; (10001f08 <DAVE_Init+0x118>)
+10001e6e:	1c18      	adds	r0, r3, #0
+10001e70:	f7ff ff3e 	bl	10001cf0 <DIGITAL_IO_Init>
+10001e74:	1c03      	adds	r3, r0, #0
+10001e76:	7023      	strb	r3, [r4, #0]
+   } 
+  if (init_status == DAVE_STATUS_SUCCESS)
+10001e78:	1dfb      	adds	r3, r7, #7
+10001e7a:	781b      	ldrb	r3, [r3, #0]
+10001e7c:	2b00      	cmp	r3, #0
+10001e7e:	d106      	bne.n	10001e8e <DAVE_Init+0x9e>
+  {
+	 /**  Initialization of DIGITAL_IO APP instance DIGITAL_IO_5 */
+	 init_status = (DAVE_STATUS_t)DIGITAL_IO_Init(&DIGITAL_IO_5); 
+10001e80:	1dfc      	adds	r4, r7, #7
+10001e82:	4b22      	ldr	r3, [pc, #136]	; (10001f0c <DAVE_Init+0x11c>)
+10001e84:	1c18      	adds	r0, r3, #0
+10001e86:	f7ff ff33 	bl	10001cf0 <DIGITAL_IO_Init>
+10001e8a:	1c03      	adds	r3, r0, #0
+10001e8c:	7023      	strb	r3, [r4, #0]
+   } 
+  if (init_status == DAVE_STATUS_SUCCESS)
+10001e8e:	1dfb      	adds	r3, r7, #7
+10001e90:	781b      	ldrb	r3, [r3, #0]
+10001e92:	2b00      	cmp	r3, #0
+10001e94:	d106      	bne.n	10001ea4 <DAVE_Init+0xb4>
+  {
+	 /**  Initialization of DIGITAL_IO APP instance DIGITAL_IO_6 */
+	 init_status = (DAVE_STATUS_t)DIGITAL_IO_Init(&DIGITAL_IO_6); 
+10001e96:	1dfc      	adds	r4, r7, #7
+10001e98:	4b1d      	ldr	r3, [pc, #116]	; (10001f10 <DAVE_Init+0x120>)
+10001e9a:	1c18      	adds	r0, r3, #0
+10001e9c:	f7ff ff28 	bl	10001cf0 <DIGITAL_IO_Init>
+10001ea0:	1c03      	adds	r3, r0, #0
+10001ea2:	7023      	strb	r3, [r4, #0]
+   } 
+  if (init_status == DAVE_STATUS_SUCCESS)
+10001ea4:	1dfb      	adds	r3, r7, #7
+10001ea6:	781b      	ldrb	r3, [r3, #0]
+10001ea8:	2b00      	cmp	r3, #0
+10001eaa:	d106      	bne.n	10001eba <DAVE_Init+0xca>
+  {
+	 /**  Initialization of DIGITAL_IO APP instance DIGITAL_IO_7 */
+	 init_status = (DAVE_STATUS_t)DIGITAL_IO_Init(&DIGITAL_IO_7); 
+10001eac:	1dfc      	adds	r4, r7, #7
+10001eae:	4b19      	ldr	r3, [pc, #100]	; (10001f14 <DAVE_Init+0x124>)
+10001eb0:	1c18      	adds	r0, r3, #0
+10001eb2:	f7ff ff1d 	bl	10001cf0 <DIGITAL_IO_Init>
+10001eb6:	1c03      	adds	r3, r0, #0
+10001eb8:	7023      	strb	r3, [r4, #0]
+   } 
+  if (init_status == DAVE_STATUS_SUCCESS)
+10001eba:	1dfb      	adds	r3, r7, #7
+10001ebc:	781b      	ldrb	r3, [r3, #0]
+10001ebe:	2b00      	cmp	r3, #0
+10001ec0:	d106      	bne.n	10001ed0 <DAVE_Init+0xe0>
+  {
+	 /**  Initialization of TIMER APP instance TIMER_0 */
+	 init_status = (DAVE_STATUS_t)TIMER_Init(&TIMER_0); 
+10001ec2:	1dfc      	adds	r4, r7, #7
+10001ec4:	4b14      	ldr	r3, [pc, #80]	; (10001f18 <DAVE_Init+0x128>)
+10001ec6:	1c18      	adds	r0, r3, #0
+10001ec8:	f7ff fd94 	bl	100019f4 <TIMER_Init>
+10001ecc:	1c03      	adds	r3, r0, #0
+10001ece:	7023      	strb	r3, [r4, #0]
+   } 
+  if (init_status == DAVE_STATUS_SUCCESS)
+10001ed0:	1dfb      	adds	r3, r7, #7
+10001ed2:	781b      	ldrb	r3, [r3, #0]
+10001ed4:	2b00      	cmp	r3, #0
+10001ed6:	d106      	bne.n	10001ee6 <DAVE_Init+0xf6>
+  {
+	 /**  Initialization of INTERRUPT APP instance INTERRUPT_0 */
+	 init_status = (DAVE_STATUS_t)INTERRUPT_Init(&INTERRUPT_0); 
+10001ed8:	1dfc      	adds	r4, r7, #7
+10001eda:	4b10      	ldr	r3, [pc, #64]	; (10001f1c <DAVE_Init+0x12c>)
+10001edc:	1c18      	adds	r0, r3, #0
+10001ede:	f7ff feaf 	bl	10001c40 <INTERRUPT_Init>
+10001ee2:	1c03      	adds	r3, r0, #0
+10001ee4:	7023      	strb	r3, [r4, #0]
+   }  
+  return init_status;
+10001ee6:	1dfb      	adds	r3, r7, #7
+10001ee8:	781b      	ldrb	r3, [r3, #0]
+} /**  End of function DAVE_Init */
+10001eea:	1c18      	adds	r0, r3, #0
+10001eec:	46bd      	mov	sp, r7
+10001eee:	b003      	add	sp, #12
+10001ef0:	bd90      	pop	{r4, r7, pc}
+10001ef2:	46c0      	nop			; (mov r8, r8)
+10001ef4:	20000598 	.word	0x20000598
+10001ef8:	10002150 	.word	0x10002150
+10001efc:	10002160 	.word	0x10002160
+10001f00:	10002170 	.word	0x10002170
+10001f04:	10002180 	.word	0x10002180
+10001f08:	10002190 	.word	0x10002190
+10001f0c:	100021a0 	.word	0x100021a0
+10001f10:	100021b0 	.word	0x100021b0
+10001f14:	100021c0 	.word	0x100021c0
+10001f18:	20000558 	.word	0x20000558
+10001f1c:	10002148 	.word	0x10002148
+
+10001f20 <XMC_GPIO_SetOutputHigh>:
+ * Register Pn_OMR is virtual and does not contain any flip-flop. A read action delivers the value of 0.
+ *
+ */
+
+__STATIC_INLINE void XMC_GPIO_SetOutputHigh(XMC_GPIO_PORT_t *const port, const uint8_t pin)
+{
+10001f20:	b580      	push	{r7, lr}
+10001f22:	b082      	sub	sp, #8
+10001f24:	af00      	add	r7, sp, #0
+10001f26:	6078      	str	r0, [r7, #4]
+10001f28:	1c0a      	adds	r2, r1, #0
+10001f2a:	1cfb      	adds	r3, r7, #3
+10001f2c:	701a      	strb	r2, [r3, #0]
+  XMC_ASSERT("XMC_GPIO_SetOutputHigh: Invalid port", XMC_GPIO_CHECK_OUTPUT_PORT(port));
+
+  port->OMR = (uint32_t)0x1U << pin;
+10001f2e:	1cfb      	adds	r3, r7, #3
+10001f30:	781b      	ldrb	r3, [r3, #0]
+10001f32:	2201      	movs	r2, #1
+10001f34:	409a      	lsls	r2, r3
+10001f36:	687b      	ldr	r3, [r7, #4]
+10001f38:	605a      	str	r2, [r3, #4]
+}
+10001f3a:	46bd      	mov	sp, r7
+10001f3c:	b002      	add	sp, #8
+10001f3e:	bd80      	pop	{r7, pc}
+
+10001f40 <XMC_GPIO_SetOutputLow>:
+ * Register Pn_OMR is virtual and does not contain any flip-flop. A read action delivers the value of 0.\n
+ *
+ */
+
+__STATIC_INLINE void XMC_GPIO_SetOutputLow(XMC_GPIO_PORT_t *const port, const uint8_t pin)
+{
+10001f40:	b580      	push	{r7, lr}
+10001f42:	b082      	sub	sp, #8
+10001f44:	af00      	add	r7, sp, #0
+10001f46:	6078      	str	r0, [r7, #4]
+10001f48:	1c0a      	adds	r2, r1, #0
+10001f4a:	1cfb      	adds	r3, r7, #3
+10001f4c:	701a      	strb	r2, [r3, #0]
+  XMC_ASSERT("XMC_GPIO_SetOutputLow: Invalid port", XMC_GPIO_CHECK_OUTPUT_PORT(port));
+
+  port->OMR = 0x10000U << pin;
+10001f4e:	1cfb      	adds	r3, r7, #3
+10001f50:	781b      	ldrb	r3, [r3, #0]
+10001f52:	2280      	movs	r2, #128	; 0x80
+10001f54:	0252      	lsls	r2, r2, #9
+10001f56:	409a      	lsls	r2, r3
+10001f58:	687b      	ldr	r3, [r7, #4]
+10001f5a:	605a      	str	r2, [r3, #4]
+}
+10001f5c:	46bd      	mov	sp, r7
+10001f5e:	b002      	add	sp, #8
+10001f60:	bd80      	pop	{r7, pc}
+10001f62:	46c0      	nop			; (mov r8, r8)
+
+10001f64 <XMC_GPIO_ToggleOutput>:
+ * and does not contain any flip-flop. A read action delivers the value of 0.
+ *
+ */
+
+__STATIC_INLINE void XMC_GPIO_ToggleOutput(XMC_GPIO_PORT_t *const port, const uint8_t pin)
+{
+10001f64:	b580      	push	{r7, lr}
+10001f66:	b082      	sub	sp, #8
+10001f68:	af00      	add	r7, sp, #0
+10001f6a:	6078      	str	r0, [r7, #4]
+10001f6c:	1c0a      	adds	r2, r1, #0
+10001f6e:	1cfb      	adds	r3, r7, #3
+10001f70:	701a      	strb	r2, [r3, #0]
+  XMC_ASSERT("XMC_GPIO_ToggleOutput: Invalid port", XMC_GPIO_CHECK_OUTPUT_PORT(port));
+
+  port->OMR = 0x10001U << pin;
+10001f72:	1cfb      	adds	r3, r7, #3
+10001f74:	781b      	ldrb	r3, [r3, #0]
+10001f76:	4a03      	ldr	r2, [pc, #12]	; (10001f84 <XMC_GPIO_ToggleOutput+0x20>)
+10001f78:	409a      	lsls	r2, r3
+10001f7a:	687b      	ldr	r3, [r7, #4]
+10001f7c:	605a      	str	r2, [r3, #4]
+}
+10001f7e:	46bd      	mov	sp, r7
+10001f80:	b002      	add	sp, #8
+10001f82:	bd80      	pop	{r7, pc}
+10001f84:	00010001 	.word	0x00010001
+
+10001f88 <XMC_GPIO_GetInput>:
+ * Prior to this api, user has to configure port pin to input mode using XMC_GPIO_SetMode().
+ *
+ */
+
+__STATIC_INLINE uint32_t XMC_GPIO_GetInput(XMC_GPIO_PORT_t *const port, const uint8_t pin)
+{
+10001f88:	b580      	push	{r7, lr}
+10001f8a:	b082      	sub	sp, #8
+10001f8c:	af00      	add	r7, sp, #0
+10001f8e:	6078      	str	r0, [r7, #4]
+10001f90:	1c0a      	adds	r2, r1, #0
+10001f92:	1cfb      	adds	r3, r7, #3
+10001f94:	701a      	strb	r2, [r3, #0]
+  XMC_ASSERT("XMC_GPIO_GetInput: Invalid port", XMC_GPIO_CHECK_PORT(port));
+
+  return (((port->IN) >> pin) & 0x1U);
+10001f96:	687b      	ldr	r3, [r7, #4]
+10001f98:	6a5a      	ldr	r2, [r3, #36]	; 0x24
+10001f9a:	1cfb      	adds	r3, r7, #3
+10001f9c:	781b      	ldrb	r3, [r3, #0]
+10001f9e:	40da      	lsrs	r2, r3
+10001fa0:	1c13      	adds	r3, r2, #0
+10001fa2:	2201      	movs	r2, #1
+10001fa4:	4013      	ands	r3, r2
+}
+10001fa6:	1c18      	adds	r0, r3, #0
+10001fa8:	46bd      	mov	sp, r7
+10001faa:	b002      	add	sp, #8
+10001fac:	bd80      	pop	{r7, pc}
+10001fae:	46c0      	nop			; (mov r8, r8)
+
+10001fb0 <DIGITAL_IO_SetOutputHigh>:
+* }
+*  @endcode
+*/
+
+__STATIC_INLINE void DIGITAL_IO_SetOutputHigh(const DIGITAL_IO_t *const handler)
+{
+10001fb0:	b580      	push	{r7, lr}
+10001fb2:	b082      	sub	sp, #8
+10001fb4:	af00      	add	r7, sp, #0
+10001fb6:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("DIGITAL_IO_SetOutputHigh: handler null pointer", handler != NULL);
+  XMC_GPIO_SetOutputHigh(handler->gpio_port, handler->gpio_pin);
+10001fb8:	687b      	ldr	r3, [r7, #4]
+10001fba:	681a      	ldr	r2, [r3, #0]
+10001fbc:	687b      	ldr	r3, [r7, #4]
+10001fbe:	7b1b      	ldrb	r3, [r3, #12]
+10001fc0:	1c10      	adds	r0, r2, #0
+10001fc2:	1c19      	adds	r1, r3, #0
+10001fc4:	f7ff ffac 	bl	10001f20 <XMC_GPIO_SetOutputHigh>
+}
+10001fc8:	46bd      	mov	sp, r7
+10001fca:	b002      	add	sp, #8
+10001fcc:	bd80      	pop	{r7, pc}
+10001fce:	46c0      	nop			; (mov r8, r8)
+
+10001fd0 <DIGITAL_IO_SetOutputLow>:
+* }
+*  @endcode
+*/
+
+__STATIC_INLINE void DIGITAL_IO_SetOutputLow(const DIGITAL_IO_t *const handler)
+{
+10001fd0:	b580      	push	{r7, lr}
+10001fd2:	b082      	sub	sp, #8
+10001fd4:	af00      	add	r7, sp, #0
+10001fd6:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("DIGITAL_IO_SetOutputLow: handler null pointer", handler != NULL);
+  XMC_GPIO_SetOutputLow(handler->gpio_port,handler->gpio_pin);
+10001fd8:	687b      	ldr	r3, [r7, #4]
+10001fda:	681a      	ldr	r2, [r3, #0]
+10001fdc:	687b      	ldr	r3, [r7, #4]
+10001fde:	7b1b      	ldrb	r3, [r3, #12]
+10001fe0:	1c10      	adds	r0, r2, #0
+10001fe2:	1c19      	adds	r1, r3, #0
+10001fe4:	f7ff ffac 	bl	10001f40 <XMC_GPIO_SetOutputLow>
+}
+10001fe8:	46bd      	mov	sp, r7
+10001fea:	b002      	add	sp, #8
+10001fec:	bd80      	pop	{r7, pc}
+10001fee:	46c0      	nop			; (mov r8, r8)
+
+10001ff0 <DIGITAL_IO_ToggleOutput>:
+* }
+*  @endcode
+*/
+
+__STATIC_INLINE void DIGITAL_IO_ToggleOutput(const DIGITAL_IO_t *const handler)
+{
+10001ff0:	b580      	push	{r7, lr}
+10001ff2:	b082      	sub	sp, #8
+10001ff4:	af00      	add	r7, sp, #0
+10001ff6:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("DIGITAL_IO_ToggleOutput: handler null pointer", handler != NULL);
+  XMC_GPIO_ToggleOutput(handler->gpio_port, handler->gpio_pin);
+10001ff8:	687b      	ldr	r3, [r7, #4]
+10001ffa:	681a      	ldr	r2, [r3, #0]
+10001ffc:	687b      	ldr	r3, [r7, #4]
+10001ffe:	7b1b      	ldrb	r3, [r3, #12]
+10002000:	1c10      	adds	r0, r2, #0
+10002002:	1c19      	adds	r1, r3, #0
+10002004:	f7ff ffae 	bl	10001f64 <XMC_GPIO_ToggleOutput>
+}
+10002008:	46bd      	mov	sp, r7
+1000200a:	b002      	add	sp, #8
+1000200c:	bd80      	pop	{r7, pc}
+1000200e:	46c0      	nop			; (mov r8, r8)
+
+10002010 <DIGITAL_IO_GetInput>:
+* }
+*  @endcode
+*/
+
+__STATIC_INLINE uint32_t DIGITAL_IO_GetInput(const DIGITAL_IO_t *const handler)
+{
+10002010:	b580      	push	{r7, lr}
+10002012:	b082      	sub	sp, #8
+10002014:	af00      	add	r7, sp, #0
+10002016:	6078      	str	r0, [r7, #4]
+  XMC_ASSERT("DIGITAL_IO_GetInput: handler null pointer", handler != NULL);
+  return XMC_GPIO_GetInput(handler->gpio_port, handler->gpio_pin);
+10002018:	687b      	ldr	r3, [r7, #4]
+1000201a:	681a      	ldr	r2, [r3, #0]
+1000201c:	687b      	ldr	r3, [r7, #4]
+1000201e:	7b1b      	ldrb	r3, [r3, #12]
+10002020:	1c10      	adds	r0, r2, #0
+10002022:	1c19      	adds	r1, r3, #0
+10002024:	f7ff ffb0 	bl	10001f88 <XMC_GPIO_GetInput>
+10002028:	1c03      	adds	r3, r0, #0
+}
+1000202a:	1c18      	adds	r0, r3, #0
+1000202c:	46bd      	mov	sp, r7
+1000202e:	b002      	add	sp, #8
+10002030:	bd80      	pop	{r7, pc}
+10002032:	46c0      	nop			; (mov r8, r8)
+
+10002034 <IRQ0_Handler>:
+uint8_t ledMode = 0; // Variable to store the current LED mode
+uint8_t buttonState = 0; // Variable to store the previous state of the pushbutton
+
+
+void changeLEDMode(void)
+{
+10002034:	b580      	push	{r7, lr}
+10002036:	af00      	add	r7, sp, #0
+  // Increment the LED mode
+  ledMode++;
+10002038:	4b12      	ldr	r3, [pc, #72]	; (10002084 <IRQ0_Handler+0x50>)
+1000203a:	781b      	ldrb	r3, [r3, #0]
+1000203c:	3301      	adds	r3, #1
+1000203e:	b2da      	uxtb	r2, r3
+10002040:	4b10      	ldr	r3, [pc, #64]	; (10002084 <IRQ0_Handler+0x50>)
+10002042:	701a      	strb	r2, [r3, #0]
+
+  // Wrap around the LED mode if it exceeds the maximum value
+  if (ledMode > 2)
+10002044:	4b0f      	ldr	r3, [pc, #60]	; (10002084 <IRQ0_Handler+0x50>)
+10002046:	781b      	ldrb	r3, [r3, #0]
+10002048:	2b02      	cmp	r3, #2
+1000204a:	d902      	bls.n	10002052 <IRQ0_Handler+0x1e>
+  {
+    ledMode = 0;
+1000204c:	4b0d      	ldr	r3, [pc, #52]	; (10002084 <IRQ0_Handler+0x50>)
+1000204e:	2200      	movs	r2, #0
+10002050:	701a      	strb	r2, [r3, #0]
+  }
+
+  // Update the LED based on the new mode
+  switch (ledMode) {
+10002052:	4b0c      	ldr	r3, [pc, #48]	; (10002084 <IRQ0_Handler+0x50>)
+10002054:	781b      	ldrb	r3, [r3, #0]
+10002056:	2b01      	cmp	r3, #1
+10002058:	d008      	beq.n	1000206c <IRQ0_Handler+0x38>
+1000205a:	2b02      	cmp	r3, #2
+1000205c:	d00b      	beq.n	10002076 <IRQ0_Handler+0x42>
+1000205e:	2b00      	cmp	r3, #0
+10002060:	d10e      	bne.n	10002080 <IRQ0_Handler+0x4c>
+    case 0:
+    	DIGITAL_IO_SetOutputLow(&DIGITAL_IO_4); // LED OFF
+10002062:	4b09      	ldr	r3, [pc, #36]	; (10002088 <IRQ0_Handler+0x54>)
+10002064:	1c18      	adds	r0, r3, #0
+10002066:	f7ff ffb3 	bl	10001fd0 <DIGITAL_IO_SetOutputLow>
+      break;
+1000206a:	e009      	b.n	10002080 <IRQ0_Handler+0x4c>
+    case 1:
+    	DIGITAL_IO_SetOutputHigh(&DIGITAL_IO_4); // LED ON
+1000206c:	4b06      	ldr	r3, [pc, #24]	; (10002088 <IRQ0_Handler+0x54>)
+1000206e:	1c18      	adds	r0, r3, #0
+10002070:	f7ff ff9e 	bl	10001fb0 <DIGITAL_IO_SetOutputHigh>
+      break;
+10002074:	e004      	b.n	10002080 <IRQ0_Handler+0x4c>
+    case 2:
+    	DIGITAL_IO_ToggleOutput(&DIGITAL_IO_4); // LED TOGGLE
+10002076:	4b04      	ldr	r3, [pc, #16]	; (10002088 <IRQ0_Handler+0x54>)
+10002078:	1c18      	adds	r0, r3, #0
+1000207a:	f7ff ffb9 	bl	10001ff0 <DIGITAL_IO_ToggleOutput>
+
+      break;
+1000207e:	46c0      	nop			; (mov r8, r8)
+  }
+}
+10002080:	46bd      	mov	sp, r7
+10002082:	bd80      	pop	{r7, pc}
+10002084:	2000059c 	.word	0x2000059c
+10002088:	10002190 	.word	0x10002190
+
+1000208c <main>:
+
+int main(void) {
+1000208c:	b590      	push	{r4, r7, lr}
+1000208e:	b083      	sub	sp, #12
+10002090:	af00      	add	r7, sp, #0
+  DAVE_STATUS_t status;
+
+  // Initialization of DAVE apps
+  status = DAVE_Init();
+10002092:	1dfc      	adds	r4, r7, #7
+10002094:	f7ff feac 	bl	10001df0 <DAVE_Init>
+10002098:	1c03      	adds	r3, r0, #0
+1000209a:	7023      	strb	r3, [r4, #0]
+
+  // Check if DAVE initialization is successful
+  if (status != DAVE_STATUS_SUCCESS) {
+1000209c:	1dfb      	adds	r3, r7, #7
+1000209e:	781b      	ldrb	r3, [r3, #0]
+100020a0:	2b00      	cmp	r3, #0
+100020a2:	d000      	beq.n	100020a6 <main+0x1a>
+    // Handle error
+    while(1);
+100020a4:	e7fe      	b.n	100020a4 <main+0x18>
+  }
+
+  // Infinite loop
+  while(1) {
+    // Read the current state of the pushbutton
+    buttonState = DIGITAL_IO_GetInput(&DIGITAL_IO_0);
+100020a6:	4b07      	ldr	r3, [pc, #28]	; (100020c4 <main+0x38>)
+100020a8:	1c18      	adds	r0, r3, #0
+100020aa:	f7ff ffb1 	bl	10002010 <DIGITAL_IO_GetInput>
+100020ae:	1c03      	adds	r3, r0, #0
+100020b0:	b2da      	uxtb	r2, r3
+100020b2:	4b05      	ldr	r3, [pc, #20]	; (100020c8 <main+0x3c>)
+100020b4:	701a      	strb	r2, [r3, #0]
+
+    // Check if the pushbutton is pressed (active low)
+    if (buttonState == 0)
+100020b6:	4b04      	ldr	r3, [pc, #16]	; (100020c8 <main+0x3c>)
+100020b8:	781b      	ldrb	r3, [r3, #0]
+100020ba:	2b00      	cmp	r3, #0
+100020bc:	d101      	bne.n	100020c2 <main+0x36>
+    {
+      changeLEDMode();
+100020be:	f7ff ffb9 	bl	10002034 <IRQ0_Handler>
+      // Add any additional logic if needed
+    }
+
+    // Add a small delay to avoid rapid button state changes
+  //  for (volatile uint32_t i = 0; i < 10000; i++);
+  }
+100020c2:	e7f0      	b.n	100020a6 <main+0x1a>
+100020c4:	10002150 	.word	0x10002150
+100020c8:	2000059d 	.word	0x2000059d
+
+100020cc <__libc_init_array>:
+100020cc:	4b0e      	ldr	r3, [pc, #56]	; (10002108 <__libc_init_array+0x3c>)
+100020ce:	b570      	push	{r4, r5, r6, lr}
+100020d0:	2500      	movs	r5, #0
+100020d2:	1c1e      	adds	r6, r3, #0
+100020d4:	4c0d      	ldr	r4, [pc, #52]	; (1000210c <__libc_init_array+0x40>)
+100020d6:	1ae4      	subs	r4, r4, r3
+100020d8:	10a4      	asrs	r4, r4, #2
+100020da:	42a5      	cmp	r5, r4
+100020dc:	d004      	beq.n	100020e8 <__libc_init_array+0x1c>
+100020de:	00ab      	lsls	r3, r5, #2
+100020e0:	58f3      	ldr	r3, [r6, r3]
+100020e2:	4798      	blx	r3
+100020e4:	3501      	adds	r5, #1
+100020e6:	e7f8      	b.n	100020da <__libc_init_array+0xe>
+100020e8:	f7ff fc1e 	bl	10001928 <_init>
+100020ec:	4b08      	ldr	r3, [pc, #32]	; (10002110 <__libc_init_array+0x44>)
+100020ee:	2500      	movs	r5, #0
+100020f0:	1c1e      	adds	r6, r3, #0
+100020f2:	4c08      	ldr	r4, [pc, #32]	; (10002114 <__libc_init_array+0x48>)
+100020f4:	1ae4      	subs	r4, r4, r3
+100020f6:	10a4      	asrs	r4, r4, #2
+100020f8:	42a5      	cmp	r5, r4
+100020fa:	d004      	beq.n	10002106 <__libc_init_array+0x3a>
+100020fc:	00ab      	lsls	r3, r5, #2
+100020fe:	58f3      	ldr	r3, [r6, r3]
+10002100:	4798      	blx	r3
+10002102:	3501      	adds	r5, #1
+10002104:	e7f8      	b.n	100020f8 <__libc_init_array+0x2c>
+10002106:	bd70      	pop	{r4, r5, r6, pc}
+10002108:	20000590 	.word	0x20000590
+1000210c:	20000590 	.word	0x20000590
+10002110:	20000590 	.word	0x20000590
+10002114:	20000590 	.word	0x20000590
+10002118:	1000180e 	.word	0x1000180e
+1000211c:	1000180e 	.word	0x1000180e
+10002120:	10001818 	.word	0x10001818
+10002124:	10001818 	.word	0x10001818
+10002128:	10001846 	.word	0x10001846
+1000212c:	10001846 	.word	0x10001846
+10002130:	10001846 	.word	0x10001846
+10002134:	10001846 	.word	0x10001846
+10002138:	10001822 	.word	0x10001822
+1000213c:	1000182e 	.word	0x1000182e
+10002140:	1000183a 	.word	0x1000183a
+10002144:	1000183a 	.word	0x1000183a
+
+10002148 <INTERRUPT_0>:
+10002148:	03000002 00000001                       ........
+
+10002150 <DIGITAL_IO_0>:
+10002150:	40040200 00000008 00000000 00000000     ...@............
+
+10002160 <DIGITAL_IO_1>:
+10002160:	40040200 00000008 00000000 00000001     ...@............
+
+10002170 <DIGITAL_IO_2>:
+10002170:	40040200 00000008 00000000 00000002     ...@............
+
+10002180 <DIGITAL_IO_3>:
+10002180:	40040200 00000008 00000000 00000003     ...@............
+
+10002190 <DIGITAL_IO_4>:
+10002190:	40040400 00000080 00010000 00000000     ...@............
+
+100021a0 <DIGITAL_IO_5>:
+100021a0:	40040400 00000080 00000001 00000001     ...@............
+
+100021b0 <DIGITAL_IO_6>:
+100021b0:	40040400 00000080 00000001 00000002     ...@............
+
+100021c0 <DIGITAL_IO_7>:
+100021c0:	40040400 00000080 00000001 00000003     ...@............
+100021d0:	00010000 03300000 00010000 00000000     ......0.........
+
+Disassembly of section .VENEER_Code:
+
+2000000c <HardFault_Veener>:
+/* ==================VENEERS VENEERS VENEERS VENEERS VENEERS=============== */
+    .section ".XmcVeneerCode","ax",%progbits
+    
+    .align 1
+    
+	Insert_InterruptVeener HardFault
+2000000c:	482c      	ldr	r0, [pc, #176]	; (200000c0 <IRQ31_Veener+0x4>)
+2000000e:	4700      	bx	r0
+	...
+
+2000002c <SVC_Veener>:
+    .long 0
+    .long 0
+    .long 0
+    .long 0
+    .long 0
+	Insert_InterruptVeener SVC
+2000002c:	4825      	ldr	r0, [pc, #148]	; (200000c4 <IRQ31_Veener+0x8>)
+2000002e:	4700      	bx	r0
+	...
+
+20000038 <PendSV_Veener>:
+    .long 0
+    .long 0
+	Insert_InterruptVeener PendSV	
+20000038:	4823      	ldr	r0, [pc, #140]	; (200000c8 <IRQ31_Veener+0xc>)
+2000003a:	4700      	bx	r0
+
+2000003c <SysTick_Veener>:
+	Insert_InterruptVeener SysTick
+2000003c:	4823      	ldr	r0, [pc, #140]	; (200000cc <IRQ31_Veener+0x10>)
+2000003e:	4700      	bx	r0
+
+20000040 <IRQ0_Veener>:
+	
+	Insert_InterruptVeener IRQ0	
+20000040:	4823      	ldr	r0, [pc, #140]	; (200000d0 <IRQ31_Veener+0x14>)
+20000042:	4700      	bx	r0
+
+20000044 <IRQ1_Veener>:
+	Insert_InterruptVeener IRQ1	
+20000044:	4823      	ldr	r0, [pc, #140]	; (200000d4 <IRQ31_Veener+0x18>)
+20000046:	4700      	bx	r0
+
+20000048 <IRQ2_Veener>:
+	Insert_InterruptVeener IRQ2	
+20000048:	4823      	ldr	r0, [pc, #140]	; (200000d8 <IRQ31_Veener+0x1c>)
+2000004a:	4700      	bx	r0
+
+2000004c <IRQ3_Veener>:
+	Insert_InterruptVeener IRQ3	
+2000004c:	4823      	ldr	r0, [pc, #140]	; (200000dc <IRQ31_Veener+0x20>)
+2000004e:	4700      	bx	r0
+
+20000050 <IRQ4_Veener>:
+	Insert_InterruptVeener IRQ4	
+20000050:	4823      	ldr	r0, [pc, #140]	; (200000e0 <IRQ31_Veener+0x24>)
+20000052:	4700      	bx	r0
+
+20000054 <IRQ5_Veener>:
+	Insert_InterruptVeener IRQ5	
+20000054:	4823      	ldr	r0, [pc, #140]	; (200000e4 <IRQ31_Veener+0x28>)
+20000056:	4700      	bx	r0
+
+20000058 <IRQ6_Veener>:
+	Insert_InterruptVeener IRQ6	
+20000058:	4823      	ldr	r0, [pc, #140]	; (200000e8 <IRQ31_Veener+0x2c>)
+2000005a:	4700      	bx	r0
+
+2000005c <IRQ7_Veener>:
+	Insert_InterruptVeener IRQ7	
+2000005c:	4823      	ldr	r0, [pc, #140]	; (200000ec <IRQ31_Veener+0x30>)
+2000005e:	4700      	bx	r0
+
+20000060 <IRQ8_Veener>:
+	Insert_InterruptVeener IRQ8	
+20000060:	4823      	ldr	r0, [pc, #140]	; (200000f0 <IRQ31_Veener+0x34>)
+20000062:	4700      	bx	r0
+
+20000064 <IRQ9_Veener>:
+	Insert_InterruptVeener IRQ9	
+20000064:	4823      	ldr	r0, [pc, #140]	; (200000f4 <IRQ31_Veener+0x38>)
+20000066:	4700      	bx	r0
+
+20000068 <IRQ10_Veener>:
+	Insert_InterruptVeener IRQ10	
+20000068:	4823      	ldr	r0, [pc, #140]	; (200000f8 <IRQ31_Veener+0x3c>)
+2000006a:	4700      	bx	r0
+
+2000006c <IRQ11_Veener>:
+	Insert_InterruptVeener IRQ11	
+2000006c:	4823      	ldr	r0, [pc, #140]	; (200000fc <IRQ31_Veener+0x40>)
+2000006e:	4700      	bx	r0
+
+20000070 <IRQ12_Veener>:
+	Insert_InterruptVeener IRQ12	
+20000070:	4823      	ldr	r0, [pc, #140]	; (20000100 <IRQ31_Veener+0x44>)
+20000072:	4700      	bx	r0
+
+20000074 <IRQ13_Veener>:
+	Insert_InterruptVeener IRQ13	
+20000074:	4823      	ldr	r0, [pc, #140]	; (20000104 <IRQ31_Veener+0x48>)
+20000076:	4700      	bx	r0
+
+20000078 <IRQ14_Veener>:
+	Insert_InterruptVeener IRQ14	
+20000078:	4823      	ldr	r0, [pc, #140]	; (20000108 <IRQ31_Veener+0x4c>)
+2000007a:	4700      	bx	r0
+
+2000007c <IRQ15_Veener>:
+	Insert_InterruptVeener IRQ15	
+2000007c:	4823      	ldr	r0, [pc, #140]	; (2000010c <IRQ31_Veener+0x50>)
+2000007e:	4700      	bx	r0
+
+20000080 <IRQ16_Veener>:
+	Insert_InterruptVeener IRQ16	
+20000080:	4823      	ldr	r0, [pc, #140]	; (20000110 <IRQ31_Veener+0x54>)
+20000082:	4700      	bx	r0
+
+20000084 <IRQ17_Veener>:
+	Insert_InterruptVeener IRQ17	
+20000084:	4823      	ldr	r0, [pc, #140]	; (20000114 <IRQ31_Veener+0x58>)
+20000086:	4700      	bx	r0
+
+20000088 <IRQ18_Veener>:
+	Insert_InterruptVeener IRQ18	
+20000088:	4823      	ldr	r0, [pc, #140]	; (20000118 <IRQ31_Veener+0x5c>)
+2000008a:	4700      	bx	r0
+
+2000008c <IRQ19_Veener>:
+	Insert_InterruptVeener IRQ19	
+2000008c:	4823      	ldr	r0, [pc, #140]	; (2000011c <IRQ31_Veener+0x60>)
+2000008e:	4700      	bx	r0
+
+20000090 <IRQ20_Veener>:
+	Insert_InterruptVeener IRQ20
+20000090:	4823      	ldr	r0, [pc, #140]	; (20000120 <IRQ31_Veener+0x64>)
+20000092:	4700      	bx	r0
+
+20000094 <IRQ21_Veener>:
+	Insert_InterruptVeener IRQ21
+20000094:	4823      	ldr	r0, [pc, #140]	; (20000124 <IRQ31_Veener+0x68>)
+20000096:	4700      	bx	r0
+
+20000098 <IRQ22_Veener>:
+	Insert_InterruptVeener IRQ22	
+20000098:	4823      	ldr	r0, [pc, #140]	; (20000128 <IRQ31_Veener+0x6c>)
+2000009a:	4700      	bx	r0
+
+2000009c <IRQ23_Veener>:
+	Insert_InterruptVeener IRQ23	
+2000009c:	4823      	ldr	r0, [pc, #140]	; (2000012c <IRQ31_Veener+0x70>)
+2000009e:	4700      	bx	r0
+
+200000a0 <IRQ24_Veener>:
+	Insert_InterruptVeener IRQ24	
+200000a0:	4823      	ldr	r0, [pc, #140]	; (20000130 <IRQ31_Veener+0x74>)
+200000a2:	4700      	bx	r0
+
+200000a4 <IRQ25_Veener>:
+	Insert_InterruptVeener IRQ25	
+200000a4:	4823      	ldr	r0, [pc, #140]	; (20000134 <IRQ31_Veener+0x78>)
+200000a6:	4700      	bx	r0
+
+200000a8 <IRQ26_Veener>:
+	Insert_InterruptVeener IRQ26	
+200000a8:	4823      	ldr	r0, [pc, #140]	; (20000138 <IRQ31_Veener+0x7c>)
+200000aa:	4700      	bx	r0
+
+200000ac <IRQ27_Veener>:
+	Insert_InterruptVeener IRQ27	
+200000ac:	4823      	ldr	r0, [pc, #140]	; (2000013c <IRQ31_Veener+0x80>)
+200000ae:	4700      	bx	r0
+
+200000b0 <IRQ28_Veener>:
+	Insert_InterruptVeener IRQ28	
+200000b0:	4823      	ldr	r0, [pc, #140]	; (20000140 <IRQ31_Veener+0x84>)
+200000b2:	4700      	bx	r0
+
+200000b4 <IRQ29_Veener>:
+	Insert_InterruptVeener IRQ29	
+200000b4:	4823      	ldr	r0, [pc, #140]	; (20000144 <IRQ31_Veener+0x88>)
+200000b6:	4700      	bx	r0
+
+200000b8 <IRQ30_Veener>:
+	Insert_InterruptVeener IRQ30	
+200000b8:	4823      	ldr	r0, [pc, #140]	; (20000148 <IRQ31_Veener+0x8c>)
+200000ba:	4700      	bx	r0
+
+200000bc <IRQ31_Veener>:
+	Insert_InterruptVeener IRQ31	
+200000bc:	4823      	ldr	r0, [pc, #140]	; (2000014c <IRQ31_Veener+0x90>)
+200000be:	4700      	bx	r0
+/* ==================VENEERS VENEERS VENEERS VENEERS VENEERS=============== */
+    .section ".XmcVeneerCode","ax",%progbits
+    
+    .align 1
+    
+	Insert_InterruptVeener HardFault
+200000c0:	1000109d 	.word	0x1000109d
+    .long 0
+    .long 0
+    .long 0
+    .long 0
+    .long 0
+	Insert_InterruptVeener SVC
+200000c4:	1000109d 	.word	0x1000109d
+    .long 0
+    .long 0
+	Insert_InterruptVeener PendSV	
+200000c8:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener SysTick
+200000cc:	1000109d 	.word	0x1000109d
+	
+	Insert_InterruptVeener IRQ0	
+200000d0:	10002035 	.word	0x10002035
+	Insert_InterruptVeener IRQ1	
+200000d4:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ2	
+200000d8:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ3	
+200000dc:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ4	
+200000e0:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ5	
+200000e4:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ6	
+200000e8:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ7	
+200000ec:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ8	
+200000f0:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ9	
+200000f4:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ10	
+200000f8:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ11	
+200000fc:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ12	
+20000100:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ13	
+20000104:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ14	
+20000108:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ15	
+2000010c:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ16	
+20000110:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ17	
+20000114:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ18	
+20000118:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ19	
+2000011c:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ20
+20000120:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ21
+20000124:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ22	
+20000128:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ23	
+2000012c:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ24	
+20000130:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ25	
+20000134:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ26	
+20000138:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ27	
+2000013c:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ28	
+20000140:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ29	
+20000144:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ30	
+20000148:	1000109d 	.word	0x1000109d
+	Insert_InterruptVeener IRQ31	
+2000014c:	1000109d 	.word	0x1000109d
