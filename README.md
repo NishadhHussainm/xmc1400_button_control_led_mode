@@ -43,9 +43,6 @@ By pressing the pushbutton, you can change the LED state as follows:
 
 Feel free to customize the code to add new features, modify LED behavior, or extend button functionality according to your specific project requirements. The provided code serves as a foundation for more advanced embedded systems.
 
-## License
-
-This project is shared under an open-source license. You can find detailed licensing terms in the [LICENSE](LICENSE) file.
 
 ## Author
 
